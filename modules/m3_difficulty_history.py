@@ -1,9 +1,4 @@
-"""M3 - Difficulty History.
-
-Plots Bitcoin mining difficulty over the last ~2 years, marks each
-adjustment event, and shows the ratio of actual vs target block time
-per adjustment period.
-"""
+"""M3 - Difficulty History."""
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -12,151 +7,109 @@ from plotly.subplots import make_subplots
 
 from api.blockchain_client import get_difficulty_history
 
+_CHART_LAYOUT = dict(
+    template="plotly_dark",
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family="sans-serif", size=12, color="#8B949E"),
+    margin=dict(l=10, r=10, t=36, b=10),
+    xaxis=dict(gridcolor="#21262D", showline=False),
+    yaxis=dict(gridcolor="#21262D", showline=False),
+)
 
-# ---------------------------------------------------------------------------
-# Cached data fetch
-# ---------------------------------------------------------------------------
 
 @st.cache_data(ttl=3600)
-def _fetch_difficulty(n_points: int) -> list[dict]:
-    return get_difficulty_history(n_points)
+def _load(n: int) -> list[dict]:
+    return get_difficulty_history(n)
 
-
-# ---------------------------------------------------------------------------
-# Analysis helpers
-# ---------------------------------------------------------------------------
-
-def build_dataframe(values: list[dict]) -> pd.DataFrame:
-    df = pd.DataFrame(values)
-    df["Date"] = pd.to_datetime(df["x"], unit="s")
-    df = df.rename(columns={"y": "Difficulty"}).drop(columns=["x"])
-    df = df.sort_values("Date").reset_index(drop=True)
-
-    # Ratio = actual_avg_block_time / target_block_time (600 s)
-    # Derivation: at each adjustment new_D = old_D * target / actual
-    #   => actual / target = old_D / new_D = D[i-1] / D[i]
-    df["Ratio"] = df["Difficulty"].shift(1) / df["Difficulty"]
-    return df
-
-
-# ---------------------------------------------------------------------------
-# Streamlit render
-# ---------------------------------------------------------------------------
 
 def render() -> None:
-    st.header("M3 — Difficulty History")
-    st.caption(
-        "Evolution of Bitcoin mining difficulty over the last ~2 years. "
-        "Difficulty adjusts every 2 016 blocks (~2 weeks) to keep the "
-        "average block time at 600 seconds."
-    )
-
-    col_slider, col_btn = st.columns([5, 1])
-    with col_slider:
-        n_points = st.slider("Data points (approx. weeks)", 30, 200, 100, key="m3_n")
-    with col_btn:
-        st.write("")
-        if st.button("Refresh", key="m3_refresh"):
+    # ── Controls ──────────────────────────────────────────────────────────────
+    c_sl, c_btn = st.columns([6, 1])
+    with c_sl:
+        n = st.slider("Periods", 30, 200, 100, key="m3_n",
+                      label_visibility="collapsed",
+                      help="Number of adjustment periods (~2 weeks each)")
+    with c_btn:
+        if st.button("⟳", key="m3_refresh"):
             st.cache_data.clear()
 
-    with st.spinner("Loading difficulty data from Blockchain.info…"):
+    with st.spinner(""):
         try:
-            values = _fetch_difficulty(n_points)
-        except Exception as exc:
-            st.error(f"API error: {exc}")
+            values = _load(n)
+        except Exception as e:
+            st.error(f"API error: {e}")
             return
 
-    df = build_dataframe(values)
+    df = (
+        pd.DataFrame(values)
+          .assign(Date=lambda d: pd.to_datetime(d["x"], unit="s"),
+                  Difficulty=lambda d: d["y"])
+          .sort_values("Date")
+          .reset_index(drop=True)
+    )
+    df["Ratio"] = df["Difficulty"].shift(1) / df["Difficulty"]
     df_ratio = df.dropna(subset=["Ratio"])
-    # Remove clearly erroneous ratio values (e.g. sampled data artefacts)
     df_ratio = df_ratio[(df_ratio["Ratio"] > 0.5) & (df_ratio["Ratio"] < 2.0)]
 
-    # -----------------------------------------------------------------------
-    # Combined chart (difficulty + ratio)
-    # -----------------------------------------------------------------------
+    # ── KPI row ───────────────────────────────────────────────────────────────
+    cur   = df["Difficulty"].iloc[-1]
+    start = df["Difficulty"].iloc[0]
+    ratio_now = df_ratio["Ratio"].iloc[-1] if len(df_ratio) else float("nan")
+
+    k1, k2, k3, k4 = st.columns(4)
+    k1.metric("Current difficulty",   f"{cur:.3e}")
+    k2.metric("Growth vs period start", f"{cur / start:.2f}×")
+    k3.metric("Last adj. ratio",      f"{ratio_now:.4f}" if ratio_now == ratio_now else "—")
+    k4.metric("Periods shown",        len(df))
+
+    st.markdown("<hr>", unsafe_allow_html=True)
+
+    # ── Combined chart ────────────────────────────────────────────────────────
     fig = make_subplots(
-        rows=2, cols=1, shared_xaxes=True,
-        row_heights=[0.65, 0.35],
-        vertical_spacing=0.06,
-        subplot_titles=["Mining Difficulty", "Actual / Target Block Time per Period"],
+        rows=2, cols=1,
+        shared_xaxes=True,
+        row_heights=[0.62, 0.38],
+        vertical_spacing=0.05,
+        subplot_titles=["Mining Difficulty", "Block Time Ratio  (actual avg / 600 s target)"],
     )
 
-    # — Difficulty line —
-    fig.add_trace(
-        go.Scatter(
-            x=df["Date"], y=df["Difficulty"],
-            mode="lines", name="Difficulty",
-            line=dict(color="#F7931A", width=2),
-        ),
-        row=1, col=1,
-    )
-
-    # — Adjustment event markers (every data point IS an adjustment) —
-    fig.add_trace(
-        go.Scatter(
-            x=df["Date"], y=df["Difficulty"],
-            mode="markers", name="Adjustment event",
-            marker=dict(color="#1565C0", size=5, symbol="circle"),
-        ),
-        row=1, col=1,
-    )
-
-    # — Ratio line —
-    fig.add_trace(
-        go.Scatter(
-            x=df_ratio["Date"], y=df_ratio["Ratio"],
-            mode="lines+markers", name="Block time ratio",
-            line=dict(color="#1976D2", width=1.5),
-            marker=dict(size=4),
-        ),
-        row=2, col=1,
-    )
-
-    # Reference line at ratio = 1
-    fig.add_hline(
-        y=1.0, row=2, col=1,
-        line_dash="dash", line_color="red", line_width=1.5,
-        annotation_text="Target = 1.0 (600 s avg)",
-        annotation_position="bottom right",
-    )
-
-    fig.update_layout(
-        height=540,
+    # Difficulty line + markers
+    fig.add_trace(go.Scatter(
+        x=df["Date"], y=df["Difficulty"],
+        mode="lines", name="Difficulty",
+        line=dict(color="#F7931A", width=2),
+    ), row=1, col=1)
+    fig.add_trace(go.Scatter(
+        x=df["Date"], y=df["Difficulty"],
+        mode="markers", name="Adjustment",
+        marker=dict(color="#1565C0", size=5),
         showlegend=True,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(t=60, b=40),
-    )
-    fig.update_yaxes(title_text="Difficulty", row=1, col=1)
-    fig.update_yaxes(title_text="Ratio", row=2, col=1)
-    fig.update_xaxes(title_text="Date", row=2, col=1)
+    ), row=1, col=1)
+
+    # Ratio area
+    fig.add_trace(go.Scatter(
+        x=df_ratio["Date"], y=df_ratio["Ratio"],
+        mode="lines", name="Ratio",
+        line=dict(color="#42A5F5", width=1.5),
+        fill="tozeroy", fillcolor="rgba(66,165,245,0.08)",
+    ), row=2, col=1)
+    fig.add_hline(y=1.0, row=2, col=1,
+                  line_dash="dash", line_color="#EF5350", line_width=1.5,
+                  annotation_text="target = 1.0", annotation_position="bottom right")
+
+    fig.update_layout(**_CHART_LAYOUT, height=500, showlegend=True,
+                      legend=dict(orientation="h", y=1.06, x=0))
+    fig.update_yaxes(title_text="Difficulty", row=1, col=1, gridcolor="#21262D")
+    fig.update_yaxes(title_text="Ratio",      row=2, col=1, gridcolor="#21262D")
+    fig.update_xaxes(title_text="Date",       row=2, col=1, gridcolor="#21262D")
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # -----------------------------------------------------------------------
-    # Explanation
-    # -----------------------------------------------------------------------
-    st.info(
-        "**Difficulty adjustment formula** (Bitcoin, §6.1):\n\n"
-        "```\nnew_difficulty = old_difficulty × (2016 × 600 s) / actual_period_time\n```\n\n"
-        "The ratio chart shows `actual_avg_block_time / 600 s` for each period "
-        "(derived as `D[i-1] / D[i]`). "
-        "A ratio **< 1** means miners were faster than 10 min → difficulty increased. "
-        "A ratio **> 1** means slower → difficulty decreased."
-    )
-
-    # -----------------------------------------------------------------------
-    # Summary metrics
-    # -----------------------------------------------------------------------
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Current difficulty", f"{df['Difficulty'].iloc[-1]:.3e}")
-    growth = df["Difficulty"].iloc[-1] / df["Difficulty"].iloc[0]
-    col2.metric(f"Growth over {n_points} periods", f"{growth:.2f}×")
-    col3.metric("Adjustment events shown", len(df))
-
-    with st.expander("Raw data table"):
-        display_df = df[["Date", "Difficulty", "Ratio"]].copy()
-        display_df["Difficulty"] = display_df["Difficulty"].apply(lambda x: f"{x:.3e}")
-        display_df["Ratio"] = display_df["Ratio"].apply(
-            lambda x: f"{x:.4f}" if pd.notna(x) else "—"
+    with st.expander("Formula & interpretation"):
+        st.markdown(
+            "```\nnew_difficulty = old_difficulty × (2016 × 600 s) / actual_period_time\n```\n"
+            "Ratio = `D[i-1] / D[i]` ≈ actual avg block time / 600 s.  \n"
+            "**< 1** → miners faster than target → difficulty ↑  \n"
+            "**> 1** → miners slower than target → difficulty ↓"
         )
-        st.dataframe(display_df, use_container_width=True)

@@ -1,157 +1,141 @@
-"""M1 - Proof of Work Monitor.
+"""M1 - Proof of Work Monitor."""
 
-Shows live Bitcoin mining state: difficulty, hash rate, leading-zero threshold,
-and the inter-block time distribution.
-"""
+import statistics
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from plotly.subplots import make_subplots
 
 from api.blockchain_client import get_recent_blocks
 
+_CHART_LAYOUT = dict(
+    template="plotly_dark",
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family="sans-serif", size=12, color="#8B949E"),
+    margin=dict(l=10, r=10, t=36, b=10),
+    xaxis=dict(gridcolor="#21262D", showline=False),
+    yaxis=dict(gridcolor="#21262D", showline=False),
+)
 
-# ---------------------------------------------------------------------------
-# Cryptographic helpers
-# ---------------------------------------------------------------------------
 
-def bits_to_target(bits: int) -> int:
-    """Decode compact 'bits' field to the 256-bit target integer.
-
-    Format: first byte = exponent, remaining 3 bytes = coefficient.
-    target = coefficient * 2^(8*(exponent - 3))
-    """
-    exp = (bits >> 24) & 0xFF
-    coeff = bits & 0x007FFFFF
+def _bits_to_target(bits: int) -> int:
+    exp, coeff = (bits >> 24) & 0xFF, bits & 0x007FFFFF
     return coeff * (2 ** (8 * (exp - 3)))
 
 
-def count_leading_zero_bits(hash_hex: str) -> int:
-    """Count leading zero bits in a 256-bit hash (given as hex string)."""
+def _leading_zeros(hash_hex: str) -> int:
     n = int(hash_hex, 16)
-    if n == 0:
-        return 256
-    return 256 - n.bit_length()
+    return 256 - n.bit_length() if n else 256
 
-
-# ---------------------------------------------------------------------------
-# Cached data fetch
-# ---------------------------------------------------------------------------
 
 @st.cache_data(ttl=60)
-def _fetch_blocks(n: int) -> list[dict]:
+def _load(n: int) -> list[dict]:
     return get_recent_blocks(n)
 
 
-# ---------------------------------------------------------------------------
-# Streamlit render
-# ---------------------------------------------------------------------------
-
 def render() -> None:
-    st.header("M1 — Proof of Work Monitor")
-    st.caption("Live data about the current state of Bitcoin mining.")
-
-    col_slider, col_btn = st.columns([5, 1])
-    with col_slider:
-        n_blocks = st.slider("Blocks to analyse", 20, 150, 50, key="m1_n")
-    with col_btn:
-        st.write("")
-        if st.button("Refresh", key="m1_refresh"):
+    # ── Controls ─────────────────────────────────────────────────────────────
+    c_slider, c_btn = st.columns([6, 1])
+    with c_slider:
+        n = st.slider("Blocks", 20, 150, 50, key="m1_n",
+                      label_visibility="collapsed",
+                      help="Number of recent blocks to analyse")
+    with c_btn:
+        if st.button("⟳", key="m1_refresh", help="Refresh data"):
             st.cache_data.clear()
 
-    with st.spinner("Fetching recent blocks from Blockstream…"):
+    # ── Fetch ─────────────────────────────────────────────────────────────────
+    with st.spinner(""):
         try:
-            blocks = _fetch_blocks(n_blocks)
-        except Exception as exc:
-            st.error(f"API error: {exc}")
+            blocks = _load(n)
+        except Exception as e:
+            st.error(f"API error: {e}")
             return
 
     latest = blocks[0]
-    bits = latest["bits"]
-    target = bits_to_target(bits)
+    bits       = latest["bits"]
     difficulty = latest["difficulty"]
-    leading_zeros = count_leading_zero_bits(latest["id"])
+    target     = _bits_to_target(bits)
+    lz         = _leading_zeros(latest["id"])
+    hr_eh      = difficulty * (2 ** 32) / 600 / 1e18
 
-    # Estimated hash rate: difficulty * 2^32 / target_block_time (600 s)
-    # Unit conversion: /1e18 → EH/s
-    hash_rate_eh = difficulty * (2 ** 32) / 600 / 1e18
+    # ── KPI row ───────────────────────────────────────────────────────────────
+    k1, k2, k3, k4, k5 = st.columns(5)
+    k1.metric("Block height",    f"{latest['height']:,}")
+    k2.metric("Difficulty",      f"{difficulty:.3e}")
+    k3.metric("Hash rate",       f"{hr_eh:.2f} EH/s")
+    k4.metric("Leading zero bits", lz)
+    k5.metric("Blocks analysed", n)
 
-    # -----------------------------------------------------------------------
-    # Top metrics
-    # -----------------------------------------------------------------------
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Block Height", f"{latest['height']:,}")
-    c2.metric("Difficulty", f"{difficulty:.3e}")
-    c3.metric("Est. Hash Rate", f"{hash_rate_eh:.2f} EH/s")
-    c4.metric("Leading Zero Bits", leading_zeros)
+    st.markdown("<hr>", unsafe_allow_html=True)
 
-    # -----------------------------------------------------------------------
-    # Target threshold visualisation
-    # -----------------------------------------------------------------------
-    st.subheader("Current Target Threshold (256-bit SHA-256 space)")
+    # ── Target hex ────────────────────────────────────────────────────────────
     target_hex = f"{target:064x}"
-    st.code(
-        f"Target:     {target_hex}\n"
-        f"Block hash: {latest['id']}"
-    )
-    st.caption(
-        f"The `bits` field `0x{bits:08x}` encodes a target requiring the block hash "
-        f"to start with at least **{leading_zeros} leading zero bits** — a number < the target above. "
-        "Miners iterate the nonce until SHA-256(SHA-256(header)) satisfies this constraint."
-    )
+    col_l, col_r = st.columns(2)
+    with col_l:
+        st.markdown("**Current target threshold**")
+        st.code(
+            f"Target  {target_hex}\n"
+            f"Hash    {latest['id']}",
+            language=None,
+        )
+        st.caption(
+            f"`bits = 0x{bits:08x}` expands to the 256-bit value above. "
+            f"A valid hash must be smaller — requiring **{lz} leading zero bits**."
+        )
 
-    # -----------------------------------------------------------------------
-    # Inter-block time distribution
-    # -----------------------------------------------------------------------
-    st.subheader(f"Inter-Block Time Distribution (last {n_blocks} blocks)")
-
-    sorted_blocks = sorted(blocks, key=lambda b: b["height"])
+    # ── Inter-block times ─────────────────────────────────────────────────────
+    sorted_b  = sorted(blocks, key=lambda b: b["height"])
     times_min = [
-        (sorted_blocks[i + 1]["timestamp"] - sorted_blocks[i]["timestamp"]) / 60
-        for i in range(len(sorted_blocks) - 1)
-        if sorted_blocks[i + 1]["timestamp"] > sorted_blocks[i]["timestamp"]
+        (sorted_b[i+1]["timestamp"] - sorted_b[i]["timestamp"]) / 60
+        for i in range(len(sorted_b) - 1)
+        if sorted_b[i+1]["timestamp"] > sorted_b[i]["timestamp"]
     ]
 
     if not times_min:
-        st.warning("Not enough data to plot distribution.")
         return
 
-    mean_min = sum(times_min) / len(times_min)
+    mean_m  = sum(times_min) / len(times_min)
+    stdev_m = statistics.stdev(times_min) if len(times_min) > 1 else 0
 
-    fig = go.Figure()
+    with col_r:
+        st.markdown("**Inter-block time stats**")
+        s1, s2 = st.columns(2)
+        s1.metric("Mean",  f"{mean_m:.2f} min")
+        s2.metric("Stdev", f"{stdev_m:.2f} min")
+        st.caption(
+            "Expected distribution: **Exponential** (memoryless Poisson process). "
+            "Each hash attempt is independent → waiting times are exp-distributed."
+        )
+
+    # ── Histogram + time series ───────────────────────────────────────────────
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=("Inter-block time distribution", "Block times — sequence"),
+        horizontal_spacing=0.08,
+    )
+
     fig.add_trace(go.Histogram(
-        x=times_min,
-        nbinsx=35,
-        marker_color="#F7931A",
-        opacity=0.85,
-        name="Observed intervals",
-    ))
-    fig.add_vline(
-        x=10, line_dash="dash", line_color="red", line_width=2,
-        annotation_text="Target: 10 min", annotation_position="top right",
-    )
-    fig.add_vline(
-        x=mean_min, line_dash="dot", line_color="#00c853", line_width=2,
-        annotation_text=f"Mean: {mean_min:.1f} min",
-        annotation_position="top left",
-    )
-    fig.update_layout(
-        xaxis_title="Time between consecutive blocks (minutes)",
-        yaxis_title="Count",
-        showlegend=False,
-        margin=dict(t=30),
-    )
+        x=times_min, nbinsx=30,
+        marker_color="#F7931A", opacity=0.8, name="Observed",
+    ), row=1, col=1)
+
+    fig.add_trace(go.Scatter(
+        x=list(range(len(times_min))), y=times_min,
+        mode="lines", line=dict(color="#F7931A", width=1.2),
+        name="Interval",
+    ), row=1, col=2)
+    fig.add_hline(y=10,     line_dash="dash",  line_color="#EF5350", line_width=1.5,
+                  annotation_text="10 min target", row=1, col=2)
+    fig.add_hline(y=mean_m, line_dash="dot",   line_color="#66BB6A", line_width=1.5,
+                  annotation_text=f"mean {mean_m:.1f} min", row=1, col=2)
+
+    fig.update_layout(**_CHART_LAYOUT, height=320, showlegend=False)
+    fig.update_xaxes(title_text="Minutes", row=1, col=1, gridcolor="#21262D")
+    fig.update_xaxes(title_text="Block index", row=1, col=2, gridcolor="#21262D")
+    fig.update_yaxes(title_text="Count", row=1, col=1, gridcolor="#21262D")
+    fig.update_yaxes(title_text="Minutes", row=1, col=2, gridcolor="#21262D")
+
     st.plotly_chart(fig, use_container_width=True)
-
-    st.info(
-        "Block inter-arrival times follow an **exponential distribution** because "
-        "mining is a memoryless Poisson process: each hash attempt succeeds independently "
-        "with constant probability. The Bitcoin protocol targets a mean of **10 minutes** "
-        "and adjusts difficulty every 2 016 blocks to maintain it."
-    )
-
-    c_mean, c_std = st.columns(2)
-    import statistics
-    c_mean.metric("Mean inter-block time", f"{mean_min:.2f} min")
-    if len(times_min) > 1:
-        c_std.metric("Std dev", f"{statistics.stdev(times_min):.2f} min")

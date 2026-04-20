@@ -1,287 +1,178 @@
-"""M4 - AI Component: Block Arrival Anomaly Detector.
-
-Model: statistical anomaly detection using an exponential distribution baseline.
-
-Rationale: Bitcoin mining is a Poisson process — each hash attempt succeeds
-independently with constant probability, so inter-block times follow an
-exponential distribution with mean ~600 s. Deviations from this distribution
-may indicate mining pool coordination, hardware outages, or network delays.
-
-Method:
-  1. Fetch the last N block timestamps.
-  2. Compute inter-arrival times (consecutive block timestamp differences).
-  3. Fit an Exponential(λ̂ = 1/x̄) distribution via maximum-likelihood.
-  4. For each interval compute the two-tailed p-value:
-       p_slow = P(T > t) = exp(-λ̂ t)      [unusually slow block]
-       p_fast = P(T < t) = 1 - exp(-λ̂ t)  [unusually fast block]
-  5. Flag as anomalous if min(p_slow, p_fast) < threshold.
-
-Evaluation: Kolmogorov–Smirnov goodness-of-fit test against the fitted
-exponential; anomaly rate (%) as secondary metric.
-"""
+"""M4 - AI Component: Block Arrival Anomaly Detector."""
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import scipy.stats as stats
 import streamlit as st
+from plotly.subplots import make_subplots
 
 from api.blockchain_client import get_recent_blocks
 
+_CHART_LAYOUT = dict(
+    template="plotly_dark",
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family="sans-serif", size=12, color="#8B949E"),
+    margin=dict(l=10, r=10, t=36, b=10),
+    xaxis=dict(gridcolor="#21262D", showline=False),
+    yaxis=dict(gridcolor="#21262D", showline=False),
+)
 
-# ---------------------------------------------------------------------------
-# Cached fetch
-# ---------------------------------------------------------------------------
 
 @st.cache_data(ttl=120)
-def _fetch_blocks(n: int) -> list[dict]:
+def _load(n: int) -> list[dict]:
     return get_recent_blocks(n)
 
 
-# ---------------------------------------------------------------------------
-# Core model
-# ---------------------------------------------------------------------------
-
-def detect_anomalies(
-    inter_times_sec: list[float], threshold: float
-) -> tuple[pd.DataFrame, float, float, float, float]:
-    """Fit exponential distribution and flag anomalous intervals.
-
-    Returns:
-        df          – DataFrame with per-interval results
-        mu          – fitted mean (1/λ̂), seconds
-        ks_stat     – KS test statistic
-        ks_p        – KS test p-value
-    """
-    arr = np.array(inter_times_sec, dtype=float)
-    mu = float(arr.mean())           # MLE: mean of exponential = 1/λ
-
-    # Two-tailed p-values under fitted Exp(λ̂)
-    p_slow = stats.expon.sf(arr, scale=mu)    # P(T > t) — too slow
-    p_fast = stats.expon.cdf(arr, scale=mu)   # P(T < t) — too fast
-
-    anomaly_slow = p_slow < threshold
-    anomaly_fast = p_fast < threshold
-
-    df = pd.DataFrame({
-        "interval_sec": arr,
-        "interval_min": arr / 60,
-        "p_slow": p_slow,
-        "p_fast": p_fast,
-        "type": np.where(anomaly_slow, "Slow", np.where(anomaly_fast, "Fast", "Normal")),
-        "anomaly": anomaly_slow | anomaly_fast,
-    })
-
-    # KS test: compare empirical distribution to fitted Exponential
+def _detect(times_sec: list[float], alpha: float):
+    arr  = np.array(times_sec, dtype=float)
+    mu   = float(arr.mean())
+    p_s  = stats.expon.sf(arr, scale=mu)
+    p_f  = stats.expon.cdf(arr, scale=mu)
+    kind = np.where(p_s < alpha, "Slow", np.where(p_f < alpha, "Fast", "Normal"))
     ks_stat, ks_p = stats.kstest(arr, "expon", args=(0, mu))
-
+    df = pd.DataFrame({
+        "min":  arr / 60,
+        "p_slow": p_s, "p_fast": p_f,
+        "type": kind,
+        "anomaly": (p_s < alpha) | (p_f < alpha),
+    })
     return df, mu, ks_stat, ks_p
 
 
-# ---------------------------------------------------------------------------
-# Streamlit render
-# ---------------------------------------------------------------------------
-
 def render() -> None:
-    st.header("M4 — AI Component: Anomaly Detector")
-    st.caption(
-        "Identifies blocks whose inter-arrival time deviates significantly from "
-        "the expected exponential distribution."
-    )
-
-    with st.expander("Model description", expanded=False):
-        st.markdown(
-            r"""
-**Model:** Statistical anomaly detection using an exponential distribution baseline.
-
-**Rationale:** Bitcoin mining is a **Poisson process** — each of the $~10^{20}$
-hash attempts per second succeeds independently with probability
-$p = 1/\text{difficulty}$.  By the memoryless property, waiting times between
-successes are exponentially distributed:
-
-$$T \sim \text{Exp}(\lambda), \quad \lambda = \frac{p \cdot H}{1} \approx \frac{1}{600\,\text{s}}$$
-
-where $H$ is the network hash rate.
-
-**Method:**
-
-1. Fetch inter-block times for the last $N$ blocks.
-2. Estimate $\hat{\lambda} = 1/\bar{x}$ via maximum-likelihood.
-3. For each interval $t_i$ compute the two-tailed p-value:
-   - $p_{\text{slow}} = P(T > t_i) = e^{-\hat{\lambda} t_i}$
-   - $p_{\text{fast}} = P(T < t_i) = 1 - e^{-\hat{\lambda} t_i}$
-4. Flag as anomalous if $\min(p_\text{slow}, p_\text{fast}) < \alpha$.
-
-**Evaluation metric:** Kolmogorov–Smirnov (KS) test — compares the empirical
-CDF to the fitted exponential CDF.  A high KS p-value confirms the exponential
-model is appropriate; anomalous blocks are then meaningful outliers.
-
-**Limitations:** The fitted $\mu$ reflects the *current* epoch's hash rate.
-Real anomalies can result from natural tail events, orphaned blocks, pool
-pauses, or timestamp manipulation.
-            """
-        )
-
-    # -----------------------------------------------------------------------
-    # Controls
-    # -----------------------------------------------------------------------
-    col1, col2, col3 = st.columns([3, 3, 1])
-    with col1:
-        n_blocks = st.slider("Blocks to analyse", 50, 300, 100, key="m4_n")
-    with col2:
-        threshold = st.slider(
-            "Anomaly p-value threshold (α)", 0.01, 0.10, 0.02, step=0.01, key="m4_thresh"
-        )
-    with col3:
-        st.write("")
-        if st.button("Refresh", key="m4_refresh"):
+    # ── Controls ──────────────────────────────────────────────────────────────
+    c1, c2, c3 = st.columns([4, 4, 1])
+    with c1:
+        n = st.slider("Blocks", 50, 300, 100, key="m4_n",
+                      label_visibility="collapsed", help="Blocks to analyse")
+    with c2:
+        alpha = st.slider("Anomaly threshold α", 0.01, 0.10, 0.02, 0.01,
+                          key="m4_a", label_visibility="collapsed")
+    with c3:
+        if st.button("⟳", key="m4_refresh"):
             st.cache_data.clear()
 
-    # -----------------------------------------------------------------------
-    # Fetch & compute
-    # -----------------------------------------------------------------------
-    with st.spinner("Fetching blocks…"):
+    # ── Fetch ─────────────────────────────────────────────────────────────────
+    with st.spinner(""):
         try:
-            blocks = _fetch_blocks(n_blocks)
-        except Exception as exc:
-            st.error(f"API error: {exc}")
+            blocks = _load(n)
+        except Exception as e:
+            st.error(f"API error: {e}")
             return
 
-    sorted_blocks = sorted(blocks, key=lambda b: b["height"])
-    inter_times = [
-        sorted_blocks[i + 1]["timestamp"] - sorted_blocks[i]["timestamp"]
-        for i in range(len(sorted_blocks) - 1)
-        if sorted_blocks[i + 1]["timestamp"] > sorted_blocks[i]["timestamp"]
+    sb = sorted(blocks, key=lambda b: b["height"])
+    times = [
+        sb[i+1]["timestamp"] - sb[i]["timestamp"]
+        for i in range(len(sb) - 1)
+        if sb[i+1]["timestamp"] > sb[i]["timestamp"]
     ]
-
-    if len(inter_times) < 10:
-        st.warning("Not enough valid inter-block intervals.")
+    if len(times) < 10:
+        st.warning("Not enough data.")
         return
 
-    df, mu, ks_stat, ks_p = detect_anomalies(inter_times, threshold)
+    df, mu, ks_stat, ks_p = _detect(times, alpha)
+    n_anom   = int(df["anomaly"].sum())
+    n_slow   = int((df["type"] == "Slow").sum())
+    n_fast   = int((df["type"] == "Fast").sum())
+    anom_pct = 100 * n_anom / len(df)
 
-    n_anomalies = int(df["anomaly"].sum())
-    n_slow = int((df["type"] == "Slow").sum())
-    n_fast = int((df["type"] == "Fast").sum())
-    anomaly_rate = 100 * n_anomalies / len(df)
-
-    # -----------------------------------------------------------------------
-    # Evaluation metrics
-    # -----------------------------------------------------------------------
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Fitted mean (μ̂)", f"{mu / 60:.2f} min")
-    c2.metric("Anomalies", f"{n_anomalies} / {len(df)} ({anomaly_rate:.1f}%)")
-    c3.metric("KS statistic", f"{ks_stat:.4f}")
-    c4.metric("KS p-value", f"{ks_p:.4f}")
+    # ── KPI row ───────────────────────────────────────────────────────────────
+    k1, k2, k3, k4, k5 = st.columns(5)
+    k1.metric("Fitted μ",        f"{mu/60:.2f} min")
+    k2.metric("Anomalies",       f"{n_anom} / {len(df)}")
+    k3.metric("Rate",            f"{anom_pct:.1f}%")
+    k4.metric("KS statistic",    f"{ks_stat:.4f}")
+    k5.metric("KS p-value",      f"{ks_p:.4f}")
 
     if ks_p > 0.05:
-        st.success(
-            f"KS test: inter-block times fit an exponential distribution "
-            f"(p = {ks_p:.3f} > 0.05). Anomaly detection is statistically grounded."
-        )
+        st.success(f"KS test p = {ks_p:.3f} > 0.05 — exponential fit is valid. Anomalies are statistically meaningful.")
     else:
-        st.warning(
-            f"KS test: marginal fit (p = {ks_p:.3f}). "
-            "Data may span multiple difficulty epochs with different λ values."
-        )
+        st.warning(f"KS test p = {ks_p:.3f} — marginal fit; data may span multiple difficulty epochs.")
 
-    # -----------------------------------------------------------------------
-    # Distribution chart with exponential fit overlay
-    # -----------------------------------------------------------------------
-    st.subheader("Inter-Block Time Distribution with Exponential Fit")
+    st.markdown("<hr>", unsafe_allow_html=True)
 
-    x_max = df["interval_min"].quantile(0.98) * 1.1
-    x_range = np.linspace(0, x_max, 300)
-    # Convert PDF from per-second to per-minute density
-    pdf_per_min = stats.expon.pdf(x_range * 60, scale=mu) * 60
-
-    fig1 = go.Figure()
-    fig1.add_trace(go.Histogram(
-        x=df["interval_min"],
-        nbinsx=40,
-        histnorm="probability density",
-        marker_color="#F7931A", opacity=0.75,
-        name="Observed",
-    ))
-    fig1.add_trace(go.Scatter(
-        x=x_range, y=pdf_per_min,
-        mode="lines", name=f"Exp fit (μ = {mu / 60:.1f} min)",
-        line=dict(color="#1565C0", width=2.5),
-    ))
-    fig1.update_layout(
-        xaxis_title="Time between blocks (minutes)",
-        yaxis_title="Probability density",
-        legend=dict(orientation="h"),
-        margin=dict(t=20),
+    # ── Charts ────────────────────────────────────────────────────────────────
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=["Distribution + Exp fit", "Anomalies — block sequence"],
+        horizontal_spacing=0.08,
     )
-    st.plotly_chart(fig1, use_container_width=True)
 
-    # -----------------------------------------------------------------------
-    # Anomaly scatter plot
-    # -----------------------------------------------------------------------
-    st.subheader("Anomaly Detection — Block Sequence")
+    # Histogram
+    fig.add_trace(go.Histogram(
+        x=df["min"], nbinsx=35,
+        histnorm="probability density",
+        marker_color="#F7931A", opacity=0.75, name="Observed",
+    ), row=1, col=1)
 
-    color_map = {"Normal": "#F7931A", "Slow": "#D32F2F", "Fast": "#388E3C"}
-    fig2 = go.Figure()
+    x_max   = float(df["min"].quantile(0.98)) * 1.1
+    xr      = np.linspace(0, x_max, 300)
+    pdf_min = stats.expon.pdf(xr * 60, scale=mu) * 60
+    fig.add_trace(go.Scatter(
+        x=xr, y=pdf_min, mode="lines", name=f"Exp fit μ={mu/60:.1f} min",
+        line=dict(color="#42A5F5", width=2),
+    ), row=1, col=1)
 
+    # Scatter with anomalies
+    color_map = {"Normal": "#F7931A", "Slow": "#EF5350", "Fast": "#66BB6A"}
     for label, color in color_map.items():
         mask = df["type"] == label
-        fig2.add_trace(go.Scatter(
-            x=df.index[mask],
-            y=df.loc[mask, "interval_min"],
+        if not mask.any():
+            continue
+        fig.add_trace(go.Scatter(
+            x=df.index[mask].tolist(),
+            y=df.loc[mask, "min"].tolist(),
             mode="markers",
-            marker=dict(color=color, size=6 if label == "Normal" else 10,
+            marker=dict(color=color, size=7 if label == "Normal" else 11,
                         symbol="circle" if label == "Normal" else "diamond"),
             name=label,
-        ))
+        ), row=1, col=2)
 
-    fig2.add_hline(
-        y=mu / 60, line_dash="dash", line_color="gray",
-        annotation_text=f"μ̂ = {mu / 60:.1f} min",
-    )
-    # Anomaly thresholds: P(T > t) = α  =>  t = -μ ln(α)
-    upper_thresh_min = -mu * np.log(threshold) / 60
-    lower_thresh_min = -mu * np.log(1 - threshold) / 60
-    fig2.add_hline(
-        y=upper_thresh_min, line_dash="dot", line_color="#D32F2F",
-        annotation_text=f"Slow threshold: {upper_thresh_min:.1f} min",
-        annotation_position="bottom right",
-    )
-    if lower_thresh_min > 0.3:
-        fig2.add_hline(
-            y=lower_thresh_min, line_dash="dot", line_color="#388E3C",
-            annotation_text=f"Fast threshold: {lower_thresh_min:.1f} min",
-            annotation_position="top right",
-        )
+    upper = -mu * np.log(alpha) / 60
+    lower = -mu * np.log(1 - alpha) / 60
+    fig.add_hline(y=mu/60,  line_dash="dot",  line_color="#8B949E",  line_width=1,
+                  annotation_text=f"μ {mu/60:.1f}", row=1, col=2)
+    fig.add_hline(y=upper,  line_dash="dash", line_color="#EF5350",  line_width=1.5,
+                  annotation_text=f"slow >{upper:.0f}m", row=1, col=2)
+    if lower > 0.5:
+        fig.add_hline(y=lower, line_dash="dash", line_color="#66BB6A", line_width=1.5,
+                      annotation_text=f"fast <{lower:.1f}m", row=1, col=2)
 
-    fig2.update_layout(
-        xaxis_title="Block sequence index",
-        yaxis_title="Inter-arrival time (minutes)",
-        legend=dict(orientation="h"),
-        margin=dict(t=20),
-    )
-    st.plotly_chart(fig2, use_container_width=True)
+    fig.update_layout(**_CHART_LAYOUT, height=360, showlegend=True,
+                      legend=dict(orientation="h", y=1.08, x=0))
+    fig.update_xaxes(title_text="Minutes",     row=1, col=1, gridcolor="#21262D")
+    fig.update_xaxes(title_text="Block index", row=1, col=2, gridcolor="#21262D")
+    fig.update_yaxes(title_text="Density",     row=1, col=1, gridcolor="#21262D")
+    fig.update_yaxes(title_text="Minutes",     row=1, col=2, gridcolor="#21262D")
 
-    st.caption(
-        f"**Slow anomalies** (red ◆): P(T > t) < {threshold} under fitted Exp — "
-        f"interval > {upper_thresh_min:.1f} min. "
-        f"**Fast anomalies** (green ◆): P(T < t) < {threshold}. "
-        f"Threshold derived from α = {threshold}."
-    )
+    st.plotly_chart(fig, use_container_width=True)
 
-    # -----------------------------------------------------------------------
-    # Anomaly table
-    # -----------------------------------------------------------------------
-    if n_anomalies > 0:
-        st.subheader(f"Anomalous Intervals ({n_anomalies} detected)")
-        anom = df[df["anomaly"]][["interval_min", "type", "p_slow", "p_fast"]].copy()
-        anom["interval_min"] = anom["interval_min"].round(2)
-        anom["p_slow"] = anom["p_slow"].apply(lambda x: f"{x:.4f}")
-        anom["p_fast"] = anom["p_fast"].apply(lambda x: f"{x:.4f}")
-        anom = anom.rename(columns={"interval_min": "Interval (min)", "type": "Type"})
-        st.dataframe(anom, use_container_width=True)
+    # ── Anomaly table ─────────────────────────────────────────────────────────
+    if n_anom:
+        adf = df[df["anomaly"]][["min", "type", "p_slow", "p_fast"]].copy()
+        adf["min"]    = adf["min"].round(2)
+        adf["p_slow"] = adf["p_slow"].apply(lambda x: f"{x:.4f}")
+        adf["p_fast"] = adf["p_fast"].apply(lambda x: f"{x:.4f}")
+        adf.columns   = ["Interval (min)", "Type", "P(T>t)", "P(T<t)"]
+        st.dataframe(adf, use_container_width=True)
     else:
-        st.success(f"No anomalies detected at α = {threshold}.")
+        st.success(f"No anomalies at α = {alpha}.")
 
-    st.metric("Slow anomalies", n_slow)
-    st.metric("Fast anomalies", n_fast)
+    with st.expander("Model description"):
+        st.markdown(
+            r"""
+**Model:** Statistical anomaly detection — Exponential distribution baseline.
+
+Mining is a **Poisson process**: each hash attempt succeeds independently with
+$p = 1/\text{difficulty}$, so inter-block times follow
+$T \sim \text{Exp}(\hat\lambda = 1/\bar x)$ (fitted by MLE).
+
+- **Slow anomaly** — $P(T > t) < \alpha$: unusually long gap.
+- **Fast anomaly** — $P(T < t) < \alpha$: unusually short gap.
+
+**Evaluation:** Kolmogorov–Smirnov test against the fitted exponential.
+High KS p-value (> 0.05) confirms the model is appropriate.
+            """
+        )
