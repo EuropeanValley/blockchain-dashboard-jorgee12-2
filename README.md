@@ -9,7 +9,7 @@ Real-time Bitcoin cryptographic metrics dashboard.
 | Field | Value |
 |---|---|
 | Student Name | Jorge Rodrigo Serrano |
-| GitHub Username | jorgee12-19 |
+| GitHub Username | jorgee12 |
 | Project Title | CryptoChain Analyzer Dashboard |
 | Chosen AI Approach | M4 — Anomaly Detector (exponential distribution baseline on inter-block times) |
 
