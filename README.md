@@ -49,6 +49,7 @@ The dashboard auto-refreshes every 60 seconds when the toggle in the sidebar is 
 ## Project Structure
 
 ```
+<<<<<<< HEAD
 blockchain-dashboard-jorgee12-2/
 ├── README.md
 ├── requirements.txt
@@ -69,3 +70,23 @@ blockchain-dashboard-jorgee12-2/
 |---|---|---|
 | Blockstream | `https://blockstream.info/api` | Block data, raw headers |
 | Blockchain.info | `https://blockchain.info` | Difficulty history chart |
+=======
+
+<!-- student-repo-auditor:teacher-feedback:start -->
+## Teacher Feedback
+
+### Kick-off Review
+
+Review time: 2026-04-20 13:31 CEST
+Status: Amber
+
+Strength:
+- Your repository keeps the expected classroom structure.
+
+Improve now:
+- The README is present but still misses part of the required kickoff information.
+
+Next step:
+- Complete the README fields for student information, AI approach, module status, and next step.
+<!-- student-repo-auditor:teacher-feedback:end -->
+>>>>>>> a6123938198a3f3befa8dcdb16b667da3978c16f
