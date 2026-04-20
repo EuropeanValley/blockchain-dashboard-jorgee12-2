@@ -32,7 +32,7 @@ Real-time Bitcoin cryptographic metrics dashboard.
 
 ## Next Step
 
-Add report PDF to `report/` folder before the 14 May deadline.
+Write and add the final report PDF to `report/` before the 14 May deadline.
 
 ## Main Problem or Blocker
 
