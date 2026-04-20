@@ -28,6 +28,7 @@ Real-time Bitcoin cryptographic metrics dashboard.
 - M2: parses the raw 80-byte block header (version, prev_hash, merkle_root, timestamp, bits, nonce), computes SHA256(SHA256(header)) with hashlib, and verifies the hash is below the target.
 - M3: plots Bitcoin difficulty history from Blockchain.info over ~2 years; marks every adjustment event; shows the actual-vs-target block time ratio per period.
 - M4: fits an exponential distribution to inter-block times (MLE), flags anomalous blocks via two-tailed p-value, and evaluates goodness of fit with the KS test.
+- UX: single-page dark dashboard with transaction network graph, KPI cards, dark Plotly charts.
 
 ## Next Step
 
@@ -44,16 +45,16 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The dashboard auto-refreshes every 60 seconds when the toggle in the sidebar is enabled.
+The dashboard auto-refreshes every 60 seconds when the toggle is enabled.
 
 ## Project Structure
 
 ```
-<<<<<<< HEAD
 blockchain-dashboard-jorgee12-2/
 ├── README.md
 ├── requirements.txt
-├── app.py                        # Dashboard entry point
+├── app.py                        # Dashboard entry point (single-page layout)
+├── .streamlit/config.toml        # Dark theme configuration
 ├── api/
 │   └── blockchain_client.py      # Blockstream + Blockchain.info helpers
 ├── modules/
@@ -68,9 +69,8 @@ blockchain-dashboard-jorgee12-2/
 
 | API | URL | Purpose |
 |---|---|---|
-| Blockstream | `https://blockstream.info/api` | Block data, raw headers |
+| Blockstream | `https://blockstream.info/api` | Block data, raw headers, transactions |
 | Blockchain.info | `https://blockchain.info` | Difficulty history chart |
-=======
 
 <!-- student-repo-auditor:teacher-feedback:start -->
 ## Teacher Feedback
@@ -89,4 +89,3 @@ Improve now:
 Next step:
 - Complete the README fields for student information, AI approach, module status, and next step.
 <!-- student-repo-auditor:teacher-feedback:end -->
->>>>>>> a6123938198a3f3befa8dcdb16b667da3978c16f

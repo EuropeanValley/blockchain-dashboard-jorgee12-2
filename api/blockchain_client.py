@@ -37,6 +37,13 @@ def get_block_header_hex(block_hash: str) -> str:
     return r.text.strip()
 
 
+def get_block_txs(block_hash: str, start_index: int = 0) -> list[dict]:
+    """Return up to 25 transactions from a block (one API call)."""
+    r = requests.get(f"{BLOCKSTREAM}/block/{block_hash}/txs/{start_index}", timeout=20)
+    r.raise_for_status()
+    return r.json()
+
+
 def get_blocks_page(start_height: int) -> list[dict]:
     """Return up to 10 blocks at/below start_height (descending)."""
     r = requests.get(f"{BLOCKSTREAM}/blocks/{start_height}", timeout=15)
