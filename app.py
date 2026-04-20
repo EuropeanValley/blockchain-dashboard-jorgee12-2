@@ -230,14 +230,15 @@ def _plot_tx_network(txs):
             name="⛏ Coinbase",
         ))
 
-    fig.update_layout(
-        **{**_DARK, "margin": dict(l=0,r=0,t=8,b=0)},
-        height=460,
-        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        legend=dict(orientation="h", y=-0.02, font=dict(size=10)),
-        hoverlabel=dict(bgcolor="#0D1117", font_size=11),
-    )
+    fig.update_layout(**{
+        **_DARK,
+        "margin": dict(l=0, r=0, t=8, b=0),
+        "height": 460,
+        "xaxis": dict(showgrid=False, zeroline=False, showticklabels=False),
+        "yaxis": dict(showgrid=False, zeroline=False, showticklabels=False),
+        "legend": dict(orientation="h", y=-0.02, font=dict(size=10)),
+        "hoverlabel": dict(bgcolor="#0D1117", font_size=11),
+    })
     return fig
 
 
