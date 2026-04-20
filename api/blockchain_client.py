@@ -59,15 +59,54 @@ def get_recent_blocks(n: int = 50) -> list[dict]:
 
 
 def get_difficulty_history(n_points: int = 150) -> list[dict]:
-    """Return difficulty history from Blockchain.info charts API.
+    """Return difficulty history as list of {"x": timestamp, "y": difficulty}.
 
-    Each entry is {"x": unix_timestamp, "y": difficulty_value}.
+    Tries Blockchain.info first; falls back to Blockstream epoch blocks.
     """
-    r = requests.get(
-        f"{BLOCKCHAIN_INFO}/charts/difficulty",
-        params={"timespan": "2years", "format": "json", "sampled": "true"},
-        timeout=15,
-    )
-    r.raise_for_status()
-    data = r.json()
-    return data.get("values", [])[-n_points:]
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 CryptoChain-Dashboard/1.0"}
+        r = requests.get(
+            f"{BLOCKCHAIN_INFO}/charts/difficulty",
+            params={"timespan": "2years", "format": "json", "sampled": "true"},
+            headers=headers,
+            timeout=15,
+        )
+        r.raise_for_status()
+        if not r.text.strip():
+            raise ValueError("Empty response from Blockchain.info")
+        data = r.json()
+        values = data.get("values", [])
+        if values:
+            return values[-n_points:]
+    except Exception:
+        pass  # fall through to Blockstream fallback
+
+    return _difficulty_history_from_blockstream(n_points)
+
+
+def _difficulty_history_from_blockstream(n_periods: int = 100) -> list[dict]:
+    """Build difficulty history by fetching one block per adjustment epoch.
+
+    One epoch = 2016 blocks ≈ 2 weeks.  Makes n_periods API calls — cached
+    by the caller for 1 hour so this is only slow on the first load.
+    """
+    tip_height = get_tip_height()
+    # Height of the most recent completed adjustment epoch
+    current_epoch = tip_height - (tip_height % 2016)
+
+    results: list[dict] = []
+    for i in range(n_periods):
+        epoch_height = current_epoch - i * 2016
+        if epoch_height < 0:
+            break
+        try:
+            page = get_blocks_page(epoch_height)
+            if not page:
+                continue
+            # page is descending; take the block closest to epoch_height
+            block = max(page, key=lambda b: b["height"])
+            results.append({"x": block["timestamp"], "y": block["difficulty"]})
+        except Exception:
+            continue
+
+    return sorted(results, key=lambda d: d["x"])
