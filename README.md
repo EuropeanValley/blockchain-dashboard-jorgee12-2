@@ -77,15 +77,15 @@ blockchain-dashboard-jorgee12-2/
 
 ### Kick-off Review
 
-Review time: 2026-04-20 13:31 CEST
+Review time: 2026-04-29 20:31 CEST
 Status: Amber
 
 Strength:
-- Your repository keeps the expected classroom structure.
+- M2 already includes concrete block-header analysis work.
 
 Improve now:
-- The README is present but still misses part of the required kickoff information.
+- The README should now reflect the checkpoint more explicitly, including progress, blockers, and updated module status.
 
 Next step:
-- Complete the README fields for student information, AI approach, module status, and next step.
+- Update the README so progress, blockers, module status, and next step match the checkpoint format exactly.
 <!-- student-repo-auditor:teacher-feedback:end -->
