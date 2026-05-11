@@ -12,10 +12,10 @@ _CHART_LAYOUT = dict(
     template="plotly_dark",
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="sans-serif", size=11, color="#6E7681"),
+    font=dict(family="Space Grotesk, sans-serif", size=11, color="#6E7681"),
     margin=dict(l=8, r=8, t=32, b=8),
-    xaxis=dict(gridcolor="#161B22", showline=False, zeroline=False),
-    yaxis=dict(gridcolor="#161B22", showline=False, zeroline=False),
+    xaxis=dict(gridcolor="rgba(255,255,255,0.05)", showline=False, zeroline=False),
+    yaxis=dict(gridcolor="rgba(255,255,255,0.05)", showline=False, zeroline=False),
 )
 
 @st.cache_data(ttl=60)
