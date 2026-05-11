@@ -30,7 +30,7 @@ def _bits_to_target(bits: int) -> int:
 
 def _verify(header_hex: str) -> dict:
     raw   = bytes.fromhex(header_hex)
-    h     = hashlib.sha256(hashlib.sha256(raw).digest())[::-1].hex()
+    h     = hashlib.sha256(hashlib.sha256(raw).digest()).digest()[::-1].hex()
     bits  = struct.unpack_from("<I", raw, 72)[0]
     tgt   = _bits_to_target(bits)
     valid = int(h, 16) <= tgt

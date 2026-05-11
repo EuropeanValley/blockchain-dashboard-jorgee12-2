@@ -78,73 +78,53 @@ def load_tip():
     block = get_block(tip_hash)
     return tip_hash, block
 
-# ── Sidebar Navigation ───────────────────────────────────────────────────────
+# ── Sidebar Configuration ───────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## ₿ CryptoChain")
-    st.caption("v1.0 — Academic Project")
+    st.markdown("## ₿ Settings")
+    auto_refresh = st.toggle("Auto-refresh 60s", value=True)
     st.markdown("<hr>", unsafe_allow_html=True)
-    
-    page = st.radio(
-        "Navigation",
-        [
-            "Overview Dashboard",
-            "PoW Monitor (M1)",
-            "Block Header (M2)",
-            "Diff. History (M3)",
-            "AI Anomaly (M4)",
-            "Tx Explorer (M5)",
-            "Security Score (M6)",
-        ]
-    )
-    
-    st.markdown("<hr>", unsafe_allow_html=True)
-    auto_refresh = st.toggle("Auto-refresh 60s", value=False)
     if st.button("⟳ Clear Cache"):
         st.cache_data.clear()
-    
     st.markdown("<hr>", unsafe_allow_html=True)
     st.caption(f"UTC: {datetime.datetime.utcnow().strftime('%H:%M:%S')}")
+    st.info("The dashboard updates automatically. Use the sidebar only for global settings.")
 
 # ── Global Header ────────────────────────────────────────────────────────────
 tip_hash, tip_block = load_tip()
 
-# ── Page Routing ─────────────────────────────────────────────────────────────
-if page == "Overview Dashboard":
-    st.markdown("### 📊 Project Overview")
-    k1, k2, k3, k4 = st.columns(4)
-    k1.metric("Block Height", f"{tip_block['height']:,}")
-    k2.metric("Difficulty", f"{tip_block['difficulty']:.2e}")
-    k3.metric("Transactions", f"{tip_block.get('tx_count', 0):,}")
-    k4.metric("Last Seen", datetime.datetime.utcfromtimestamp(tip_block['timestamp']).strftime("%H:%M UTC"))
-    
-    st.markdown("<hr>", unsafe_allow_html=True)
-    
-    # Show small snippets of M1 and M2 in overview
-    c1, c2 = st.columns(2)
-    with c1:
-        st.info("💡 **M1 & M2** are focused on the current Proof of Work state and block structure.")
-    with c2:
-        st.info("🧠 **M4** implements an AI Anomaly Detector using an Exponential distribution baseline.")
-    
-    st.markdown("#### Latest Block Tx Network")
-    m5_tx_explorer.render(tip_hash)
+st.markdown("### ₿ &nbsp;CryptoChain Analyzer Dashboard")
+st.caption(f"Real-time monitoring of the Bitcoin network · Block #{tip_block['height']:,}")
+st.markdown("<hr>", unsafe_allow_html=True)
 
-elif page == "PoW Monitor (M1)":
+# ── Section 1: Network & PoW Status ─────────────────────────────────────────
+col_m1, col_m2 = st.columns([1, 1], gap="large")
+
+with col_m1:
     m1_pow_monitor.render()
 
-elif page == "Block Header (M2)":
+with col_m2:
     m2_block_header.render()
 
-elif page == "Diff. History (M3)":
+st.markdown("<hr>", unsafe_allow_html=True)
+
+# ── Section 2: AI & History ─────────────────────────────────────────────────
+col_m3, col_m4 = st.columns([1, 1], gap="large")
+
+with col_m3:
     m3_difficulty_history.render()
 
-elif page == "AI Anomaly (M4)":
+with col_m4:
     m4_ai_component.render()
 
-elif page == "Tx Explorer (M5)":
+st.markdown("<hr>", unsafe_allow_html=True)
+
+# ── Section 3: Transactions & Security ──────────────────────────────────────
+col_m5, col_m6 = st.columns([1, 1], gap="large")
+
+with col_m5:
     m5_tx_explorer.render(tip_hash)
 
-elif page == "Security Score (M6)":
+with col_m6:
     m6_security.render()
 
 # ── Auto-refresh logic ───────────────────────────────────────────────────────
