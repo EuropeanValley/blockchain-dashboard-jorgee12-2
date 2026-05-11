@@ -296,8 +296,8 @@ st.markdown("""
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# ── Section 1: Network Core & Protocol ──────────────────────────────────────
-st.markdown("## 🌐 Network Core & Protocol")
+# ── Section 1: Blockchain Core & Consensus ──────────────────────────────────
+st.markdown("## ⛓️ Blockchain Core & Consensus")
 with st.container():
     col_m1, col_m2 = st.columns([1, 1], gap="large")
     with col_m1:
@@ -307,8 +307,8 @@ with st.container():
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# ── Section 2: Intelligent Analysis & History ───────────────────────────────
-st.markdown("## 🧠 Intelligent Analysis & History")
+# ── Section 2: Predictive Analytics & History ───────────────────────────────
+st.markdown("## 📈 Predictive Analytics & History")
 with st.container():
     col_m3, col_m4 = st.columns([1, 1], gap="large")
     with col_m3:
@@ -318,8 +318,8 @@ with st.container():
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# ── Section 3: Value Flow & Market ──────────────────────────────────────────
-st.markdown("## 💸 Value Flow & Market")
+# ── Section 3: Transaction Flow & Mempool ───────────────────────────────────
+st.markdown("## ⚡ Transaction Flow & Mempool")
 with st.container():
     col_m5, col_m7 = st.columns([1, 1], gap="large")
     with col_m5:
@@ -329,8 +329,8 @@ with st.container():
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# ── Section 4: Advanced Cryptography ────────────────────────────────────────
-st.markdown("## 🔐 Advanced Cryptography")
+# ── Section 4: Cryptographic Forensic Analysis ──────────────────────────────
+st.markdown("## 🧩 Cryptographic Forensic Analysis")
 with st.container():
     col_m8, col_m9 = st.columns([1, 1], gap="large")
     with col_m8:
@@ -340,8 +340,8 @@ with st.container():
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# ── Section 5: Security Evaluation ──────────────────────────────────────────
-st.markdown("## 🛡️ Security Evaluation")
+# ── Section 5: Network Attack Immunity ──────────────────────────────────────
+st.markdown("## 🛡️ Network Attack Immunity")
 with st.container():
     m6_security.render(tip_block)
 
