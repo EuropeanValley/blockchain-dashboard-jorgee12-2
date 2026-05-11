@@ -6,7 +6,7 @@ Real-time Bitcoin cryptographic metrics dashboard.
 
 ## Student Information
 - **Name:** Jorge Rodrigo Serrano
-- **GitHub Username:** jorgee12
+- **GitHub Username:** jorgee12-2
 
 ## Project Title
 CryptoChain Analyzer Dashboard
