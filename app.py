@@ -93,13 +93,17 @@ st.markdown("""
     100% { transform: translateY(0px); }
 }
 
-/* Holographic Titles */
-h1, h2, h3 {
+/* Holographic Text Effect (applied to spans) */
+.holo-text {
     background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+h1, h2, h3 {
     font-family: 'Space Grotesk', sans-serif !important;
     letter-spacing: -0.03em !important;
+    color: white; /* Fallback for emojis */
 }
 
 /* Advanced KPI Cards */
@@ -268,11 +272,11 @@ st.markdown("""
 st.markdown("""
 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
     <div style="display: flex; align-items: center; gap: 20px;">
-        <div style="background: var(--primary); padding: 12px; border-radius: 14px; box-shadow: 0 0 30px rgba(247,147,26,0.4);">
-            <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" width="35" style="filter: brightness(0) invert(1);">
+        <div style="background: rgba(247,147,26,0.1); padding: 12px; border-radius: 14px; box-shadow: 0 0 30px rgba(247,147,26,0.2); border: 1px solid var(--primary);">
+            <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" width="35">
         </div>
         <div>
-            <h1 style="margin:0; font-size: 2.2rem;">CryptoChain <span style="color:var(--primary)">Analyzer</span></h1>
+            <h1 style="margin:0; font-size: 2.2rem;"><span class="holo-text">CryptoChain Analyzer</span></h1>
             <p style="margin:0; color: #8B949E; font-size: 0.9rem;">Intelligence layer for the Bitcoin network · Protocol Analysis</p>
         </div>
     </div>
@@ -297,7 +301,7 @@ st.markdown("""
 st.markdown("<hr>", unsafe_allow_html=True)
 
 # ── Section 1: Blockchain Core & Consensus ──────────────────────────────────
-st.markdown("## ⛓️ Blockchain Core & Consensus")
+st.markdown("## ⛓️ <span class='holo-text'>Blockchain Core & Consensus</span>", unsafe_allow_html=True)
 with st.container():
     col_m1, col_m2 = st.columns([1, 1], gap="large")
     with col_m1:
@@ -308,7 +312,7 @@ with st.container():
 st.markdown("<hr>", unsafe_allow_html=True)
 
 # ── Section 2: Predictive Analytics & History ───────────────────────────────
-st.markdown("## 📈 Predictive Analytics & History")
+st.markdown("## 📈 <span class='holo-text'>Predictive Analytics & History</span>", unsafe_allow_html=True)
 with st.container():
     col_m3, col_m4 = st.columns([1, 1], gap="large")
     with col_m3:
@@ -319,7 +323,7 @@ with st.container():
 st.markdown("<hr>", unsafe_allow_html=True)
 
 # ── Section 3: Transaction Flow & Mempool ───────────────────────────────────
-st.markdown("## ⚡ Transaction Flow & Mempool")
+st.markdown("## ⚡ <span class='holo-text'>Transaction Flow & Mempool</span>", unsafe_allow_html=True)
 with st.container():
     col_m5, col_m7 = st.columns([1, 1], gap="large")
     with col_m5:
@@ -330,7 +334,7 @@ with st.container():
 st.markdown("<hr>", unsafe_allow_html=True)
 
 # ── Section 4: Cryptographic Forensic Analysis ──────────────────────────────
-st.markdown("## 🧩 Cryptographic Forensic Analysis")
+st.markdown("## 🧩 <span class='holo-text'>Cryptographic Forensic Analysis</span>", unsafe_allow_html=True)
 with st.container():
     col_m8, col_m9 = st.columns([1, 1], gap="large")
     with col_m8:
@@ -341,7 +345,7 @@ with st.container():
 st.markdown("<hr>", unsafe_allow_html=True)
 
 # ── Section 5: Network Attack Immunity ──────────────────────────────────────
-st.markdown("## 🛡️ Network Attack Immunity")
+st.markdown("## 🛡️ <span class='holo-text'>Network Attack Immunity</span>", unsafe_allow_html=True)
 with st.container():
     m6_security.render(tip_block)
 
