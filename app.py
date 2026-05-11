@@ -37,16 +37,15 @@ st.markdown("""
     --neon-orange: #FFAB40;
     --neon-blue: #00E5FF;
     --secondary: #1565C0;
-    --bg: #010203;
-    --card-bg: rgba(13, 17, 23, 0.7);
-    --border: rgba(255, 255, 255, 0.1);
+    --bg: #020406;
+    --card-bg: rgba(10, 15, 25, 0.7);
+    --border: rgba(255, 255, 255, 0.08);
 }
 
 #MainMenu, footer, header, .stDeployButton {display:none!important}
-.block-container {padding: 1.5rem 3rem !important; background-color: var(--bg)}
 
 /* Global Typography */
-html, body, [class*="css"]  {
+html, body, [class*="css"] {
     font-family: 'Inter', sans-serif !important;
     color: #E6EDF3 !important;
 }
@@ -54,64 +53,94 @@ html, body, [class*="css"]  {
 h1, h2, h3, .section-label {
     font-family: 'Space Grotesk', sans-serif !important;
     font-weight: 700 !important;
-    letter-spacing: -0.02em !important;
 }
 
-/* Glassmorphism Containers */
-div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div {
-    /* background: var(--card-bg);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1rem;
-    margin-bottom: 1rem; */
+/* Moving Cyber-Grid Background */
+.main {
+    background-color: var(--bg) !important;
+    background-image: 
+        linear-gradient(rgba(247, 147, 26, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(247, 147, 26, 0.03) 1px, transparent 1px) !important;
+    background-size: 40px 40px !important;
+    animation: grid-move 20s linear infinite !important;
 }
 
-/* Custom KPI Cards */
+@keyframes grid-move {
+    0% { background-position: 0 0; }
+    100% { background-position: 40px 40px; }
+}
+
+.block-container {
+    padding: 2rem 4rem !important;
+}
+
+/* Custom Metric Cards with Animated Border */
 [data-testid="metric-container"] {
-    background: linear-gradient(145deg, rgba(20, 26, 35, 0.8), rgba(10, 14, 20, 0.9)) !important;
+    background: var(--card-bg) !important;
+    backdrop-filter: blur(15px) !important;
     border: 1px solid var(--border) !important;
-    border-radius: 16px !important;
-    padding: 20px !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
-    transition: transform 0.3s ease, border-color 0.3s ease !important;
+    border-radius: 20px !important;
+    padding: 24px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+    position: relative;
+    overflow: hidden;
 }
 
-[data-testid="metric-container"]:hover {
-    transform: translateY(-5px);
-    border-color: var(--primary) !important;
+[data-testid="metric-container"]::before {
+    content: "";
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    animation: border-trace 4s linear infinite;
+}
+
+@keyframes border-trace {
+    0% { left: -100%; }
+    100% { left: 100%; }
 }
 
 [data-testid="stMetricValue"] {
     color: var(--primary) !important;
     font-family: 'Space Grotesk', sans-serif !important;
-    font-size: 1.8rem !important;
-    font-weight: 700 !important;
-    text-shadow: 0 0 20px rgba(247, 147, 26, 0.3);
+    font-size: 2rem !important;
+    text-shadow: 0 0 25px rgba(247, 147, 26, 0.4);
 }
 
-[data-testid="stMetricLabel"] {
-    color: #8B949E !important;
-    font-size: 0.75rem !important;
-    font-weight: 600 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
-/* Animated Background */
-.main {
-    background: radial-gradient(circle at 50% -20%, #1a237e 0%, #030508 60%) !important;
-}
-
-/* Section labels */
+/* Section labels with Neon Underline */
 .section-label {
     color: var(--primary);
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     text-transform: uppercase;
-    letter-spacing: 0.15em;
-    margin-bottom: 1rem;
-    border-left: 3px solid var(--primary);
-    padding-left: 10px;
+    letter-spacing: 0.2em;
+    margin-bottom: 1.5rem;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(247,147,26,0.2);
+    display: inline-block;
+}
+
+/* Styled Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { 
+    background: rgba(247, 147, 26, 0.2); 
+    border-radius: 10px; 
+}
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* Sidebar Premium */
+[data-testid="stSidebar"] {
+    background-color: #030508 !important;
+    border-right: 1px solid var(--border);
+}
+
+/* Glass Containers for Sections */
+.stContainer {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-radius: 24px !important;
+    padding: 25px !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    margin-bottom: 2rem !important;
 }
 
 /* Buttons */

@@ -10,72 +10,56 @@
 The dashboard implements several modules that bridge theoretical cryptographic concepts with real-time data from the Bitcoin network.
 
 ### 1.1 Proof of Work and Target Threshold (M1 & M2)
-The core of Bitcoin's security is the **Proof of Work (PoW)** mechanism. In **Module M2**, we parse the 80-byte block header which includes:
-- `version` (4B)
-- `prev_hash` (32B)
-- `merkle_root` (32B)
-- `timestamp` (4B)
-- `bits` (4B)
-- `nonce` (4B)
-
-The `bits` field encodes the **target threshold** (a 256-bit number). A block is considered valid only if its double-SHA256 hash is less than or equal to this target.
-Our dashboard performs this verification locally:
+The core of Bitcoin's security is the **Proof of Work (PoW)** mechanism. In **Module M2**, we parse the 80-byte block header and perform local verification:
 ```python
 computed_hash = sha256(sha256(raw_header))
 is_valid = int(computed_hash, 16) <= target
 ```
-This demonstrates the concept of **Difficulty adjustment**: as more hash rate enters the network, the target threshold decreases (requiring more leading zeros), keeping the average block time around 10 minutes.
+This demonstrates the concept of **Difficulty adjustment**: as hash rate fluctuates, the target threshold scales to maintain 10-minute intervals.
 
 ### 1.2 Difficulty History and Adjustment (M3)
 **Module M3** tracks the evolution of difficulty over time. Bitcoin adjusts difficulty every 2016 blocks based on the ratio between the actual time taken and the 2-week target.
-$$ \text{new\_difficulty} = \text{old\_difficulty} \times \frac{2016 \times 600\text{s}}{\text{actual\_time}} $$
-We visualize this ratio to show how the network responds to fluctuations in mining power.
 
 ---
 
 ## 2. AI Component: Statistical Anomaly Detection
 
-For **Module M4**, we implemented an **Anomaly Detector** based on the inter-block arrival times.
+For **Module M4**, we implemented an **Anomaly Detector** based on inter-block arrival times.
 
 ### 2.1 Model Selection
-Mining is a **Poisson process** because each hash attempt is independent and has a very low probability of success. Consequently, the time between blocks follows an **Exponential distribution** with parameter $\lambda = 1/10 \text{ min}^{-1}$.
-
-We use **Maximum Likelihood Estimation (MLE)** to fit an exponential distribution to the last $N$ blocks. We then identify "anomalies" as blocks whose arrival time $t$ has a very low probability under the fitted model:
-- **Fast anomaly:** $P(T < t) < \alpha$
-- **Slow anomaly:** $P(T > t) < \alpha$
+Mining follows a **Poisson process**. Inter-block times follow an **Exponential distribution** with parameter $\lambda = 1/10 \text{ min}^{-1}$. We use MLE to fit the model and detect outliers.
 
 ### 2.2 Evaluation
-The model is evaluated using the **Kolmogorov-Smirnov (KS) test**, which compares the empirical cumulative distribution function (ECDF) of our data with the theoretical CDF of the exponential distribution. A high p-value (> 0.05) indicates that the exponential model is a good fit for the data.
+The model is evaluated using the **Kolmogorov-Smirnov (KS) test**, ensuring that the theoretical exponential model accurately reflects real-world data.
 
 ---
 
 ## 3. Beyond Course Notes: Security and Network Analysis
 
 ### 3.1 51% Attack Cost (M6)
-We expanded the project by estimating the real-world cost of a 51% attack. Using current network hashrate (~600 EH/s) and specifications for modern hardware (Antminer S21 Pro), we estimate:
-- **Hardware CapEx:** The cost to purchase enough miners (Billions of USD).
-- **OpEx (Electricity):** The hourly cost to run the attack (Millions of USD/hour).
+We estimate the CapEx (Hardware) and OpEx (Electricity) required to overtake the network, currently requiring billions of USD in infrastructure.
 
 ### 3.2 Nakamoto Double-Spend Probability
-Based on Section 11 of the original **Nakamoto (2008)** whitepaper, we visualize the probability of an attacker with $q$ hashrate successfully catching up after $z$ confirmations. This provides a quantitative measure of transaction security.
+Visualizing Section 11 of the 2008 whitepaper: the probability of an attacker catching up after $z$ confirmations.
 
 ### 3.3 Mempool & Fee Market (M7)
-We integrated live data from **mempool.space** to provide recommended fees and mempool weight visualization.
+Real-time monitoring of network congestion and recommended fees via mempool.space.
 
 ### 3.4 Scalability and SegWit (M8)
-A deep dive into **Segregated Witness (SegWit)** allows us to analyze the difference between block **size** and **weight**. We demonstrate the "Witness Discount" cryptographic property and explain how it enables Layer 2 scaling (Lightning Network).
+Analysis of the "Witness Discount" and how SegWit enables Layer 2 scaling via the separation of signatures.
 
 ### 3.5 Nonce Entropy & ASIC Fingerprinting (M9)
-By analyzing the statistical distribution of nonces, we evaluate the **entropy** of the mining process. Patterns in nonces can reveal "ASIC Fingerprinting," identifying specific hardware manufacturers based on their search patterns.
+Statistical analysis of nonces to identify patterns in the search space, demonstrating advanced probability theory applied to blockchain forensics.
 
 ---
 
-## 4. UI/UX: State-of-the-Art Dashboard Design
+## 4. UI/UX: Super-Premium Dashboard Design
 
-The dashboard was built with a "Premium-First" philosophy:
-- **Glassmorphism:** Semi-transparent layers and background blur.
-- **Micro-animations:** Pulsating "LIVE" indicators and marquee tickers.
-- **Typography:** Implementation of high-end fonts (*Inter* and *Space Grotesk*).
+The dashboard follows a "Super-Premium" design language:
+- **Cyber-Grid Background:** A moving animated grid providing a technical atmosphere.
+- **Neon Border Tracing:** CSS animations that trace borders, emphasizing "live" data.
+- **Glassmorphism 2.0:** Deep frosted-glass effects with enhanced contrast and blur.
+- **Micro-animations:** Pulsating "LIVE" indicators, marquee tickers, and custom scrollbars.
 
 ---
 
