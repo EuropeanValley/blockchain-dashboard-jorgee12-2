@@ -212,8 +212,16 @@ def load_multi_blocks(n=50):
         mock_blocks = []
         for i in range(n):
             mock_blocks.append({
-                'id': f"mock_{i}", 'height': 840000 - i, 'timestamp': now - (i * 600),
-                'difficulty': 80e12, 'size': 1400000, 'weight': 3800000, 'nonce': 123456
+                'id': f"0000000000000000000000000000000000000000000000000000{i:04x}", 
+                'height': 840000 - i, 
+                'timestamp': now - (i * 600),
+                'difficulty': 80e12, 
+                'bits': 0x17034c26,
+                'size': 1400000 + (i * 100), 
+                'weight': 3800000 + (i * 200), 
+                'nonce': 12345678 + i,
+                'version': 0x20000000,
+                'merkle_root': 'mock_merkle_root'
             })
         return mock_blocks
 
