@@ -104,7 +104,7 @@ def render() -> None:
     fig.update_yaxes(title_text="Ratio",      row=2, col=1, gridcolor="#21262D")
     fig.update_xaxes(title_text="Date",       row=2, col=1, gridcolor="#21262D")
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
     with st.expander("Formula & interpretation"):
         st.markdown(

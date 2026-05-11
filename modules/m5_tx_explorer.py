@@ -179,8 +179,8 @@ def render(block_hash: str) -> None:
             return
 
     if txs:
-        st.plotly_chart(_plot_tx_network(txs), use_container_width=True)
-        st.plotly_chart(_plot_tx_bubbles(txs), use_container_width=True)
+        st.plotly_chart(_plot_tx_network(txs), width='stretch')
+        st.plotly_chart(_plot_tx_bubbles(txs), width='stretch')
         st.caption(
             f"Showing {len(txs)} transactions. "
             "Node **size** = virtual bytes · **colour** = fee rate (sat/vB) · "

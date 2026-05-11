@@ -60,6 +60,6 @@ def render() -> None:
             height=200,
             margin=dict(l=20, r=20, t=40, b=20)
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     st.caption("Data source: mempool.space API. Fees represent the required rate to be included in the next blocks.")

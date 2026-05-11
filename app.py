@@ -193,7 +193,7 @@ with st.sidebar:
     if st.button("⟳ Clear Cache"):
         st.cache_data.clear()
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.caption(f"UTC: {datetime.datetime.utcnow().strftime('%H:%M:%S')}")
+    st.caption(f"UTC: {datetime.datetime.now(datetime.UTC).strftime('%H:%M:%S')}")
     st.info("The dashboard updates automatically. Use the sidebar only for global settings.")
 
 # ── Global Header ────────────────────────────────────────────────────────────

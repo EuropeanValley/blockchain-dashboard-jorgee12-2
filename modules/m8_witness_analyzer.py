@@ -52,7 +52,7 @@ def render(blocks: list) -> None:
         yaxis_title="Units",
         legend=dict(orientation="h", y=1.1, x=0)
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
     with st.expander("Cryptographic Context: SegWit"):
         st.markdown(

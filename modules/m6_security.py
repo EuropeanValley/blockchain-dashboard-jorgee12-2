@@ -100,7 +100,7 @@ def render() -> None:
         title=dict(text=f"Probability of successful double-spend (q={q_slider:.2f})", font=dict(size=12)),
     )
     fig.update_yaxes(type="log", range=[-4, 0], gridcolor="#161B22")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
     
     st.info(
         "As $z$ (confirmations) increases, the probability of an attacker with hashrate $q < 0.5$ "

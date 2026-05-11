@@ -83,7 +83,7 @@ def render() -> None:
                 return
 
     fields = _parse(header_hex)
-    dt     = datetime.datetime.utcfromtimestamp(fields["timestamp"])
+    dt     = datetime.datetime.fromtimestamp(fields["timestamp"], datetime.UTC)
 
     # ── KPI row ──────────────────────────────────────────────────────────────
     k1, k2, k3, k4, k5 = st.columns(5)

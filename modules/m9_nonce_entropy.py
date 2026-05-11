@@ -81,6 +81,6 @@ def render(blocks: list) -> None:
         yaxis_title="Nonce Value (32-bit)",
         title=dict(text="Nonce Distribution (0 to 2^32)", font=dict(size=12))
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
     st.caption("A perfectly uniform distribution suggests high entropy. Patterns (clusters) can reveal specific ASIC manufacturer strategies or software-defined nonce ranges.")

@@ -147,7 +147,7 @@ def render() -> None:
     fig.update_yaxes(title_text="Density",     row=1, col=1, gridcolor="#21262D")
     fig.update_yaxes(title_text="Minutes",     row=1, col=2, gridcolor="#21262D")
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
     # ── Anomaly table ─────────────────────────────────────────────────────────
     if n_anom:
@@ -156,7 +156,7 @@ def render() -> None:
         adf["p_slow"] = adf["p_slow"].apply(lambda x: f"{x:.4f}")
         adf["p_fast"] = adf["p_fast"].apply(lambda x: f"{x:.4f}")
         adf.columns   = ["Interval (min)", "Type", "P(T>t)", "P(T<t)"]
-        st.dataframe(adf, use_container_width=True)
+        st.dataframe(adf, width='stretch')
     else:
         st.success(f"No anomalies at α = {alpha}.")
 

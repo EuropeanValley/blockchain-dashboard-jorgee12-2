@@ -138,4 +138,4 @@ def render() -> None:
     fig.update_yaxes(title_text="Count", row=1, col=1, gridcolor="#21262D")
     fig.update_yaxes(title_text="Minutes", row=1, col=2, gridcolor="#21262D")
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
