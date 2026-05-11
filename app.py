@@ -34,129 +34,118 @@ st.markdown("""
 
 :root {
     --primary: #F7931A;
-    --neon-orange: #FFAB40;
-    --neon-blue: #00E5FF;
-    --secondary: #1565C0;
-    --bg: #020406;
-    --card-bg: rgba(10, 15, 25, 0.7);
-    --border: rgba(255, 255, 255, 0.08);
+    --primary-glow: rgba(247, 147, 26, 0.5);
+    --secondary: #00E5FF;
+    --bg: #010204;
+    --card-bg: rgba(8, 12, 20, 0.85);
+    --border: rgba(255, 255, 255, 0.05);
 }
 
 #MainMenu, footer, header, .stDeployButton {display:none!important}
 
-/* Global Typography */
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif !important;
-    color: #E6EDF3 !important;
+/* Cinematic Film Grain Overlay */
+.main::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image: url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 999;
 }
 
-h1, h2, h3, .section-label {
-    font-family: 'Space Grotesk', sans-serif !important;
-    font-weight: 700 !important;
-}
-
-/* Moving Cyber-Grid Background */
+/* Hypermodern Background with Perspective Grid */
 .main {
     background-color: var(--bg) !important;
     background-image: 
-        linear-gradient(rgba(247, 147, 26, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(247, 147, 26, 0.03) 1px, transparent 1px) !important;
-    background-size: 40px 40px !important;
-    animation: grid-move 20s linear infinite !important;
+        radial-gradient(circle at 50% 0%, rgba(247, 147, 26, 0.08) 0%, transparent 50%),
+        linear-gradient(rgba(247, 147, 26, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(247, 147, 26, 0.02) 1px, transparent 1px) !important;
+    background-size: 100% 100%, 60px 60px, 60px 60px !important;
+    animation: grid-drift 60s linear infinite !important;
 }
 
-@keyframes grid-move {
-    0% { background-position: 0 0; }
-    100% { background-position: 40px 40px; }
+@keyframes grid-drift {
+    0% { background-position: 0 0, 0 0, 0 0; }
+    100% { background-position: 0 0, 60px 60px, 60px 60px; }
 }
 
 .block-container {
-    padding: 2rem 4rem !important;
+    padding: 3rem 5rem !important;
 }
 
-/* Custom Metric Cards with Animated Border */
-[data-testid="metric-container"] {
+/* Floating Glass Containers */
+.stContainer {
     background: var(--card-bg) !important;
-    backdrop-filter: blur(15px) !important;
+    backdrop-filter: blur(25px) saturate(150%) !important;
     border: 1px solid var(--border) !important;
-    border-radius: 20px !important;
-    padding: 24px !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
-    position: relative;
-    overflow: hidden;
+    border-radius: 28px !important;
+    padding: 30px !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.02) !important;
+    margin-bottom: 2.5rem !important;
+    animation: float 6s ease-in-out infinite;
 }
 
-[data-testid="metric-container"]::before {
-    content: "";
-    position: absolute;
-    top: 0; left: -100%;
-    width: 100%; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--primary), transparent);
-    animation: border-trace 4s linear infinite;
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
 }
 
-@keyframes border-trace {
-    0% { left: -100%; }
-    100% { left: 100%; }
+/* Holographic Titles */
+h1, h2, h3 {
+    background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: 'Space Grotesk', sans-serif !important;
+    letter-spacing: -0.03em !important;
+}
+
+/* Advanced KPI Cards */
+[data-testid="metric-container"] {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 22px !important;
+    padding: 25px !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+[data-testid="metric-container"]:hover {
+    background: rgba(247, 147, 26, 0.05) !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 30px rgba(247, 147, 26, 0.2) !important;
+    transform: scale(1.02) !important;
 }
 
 [data-testid="stMetricValue"] {
-    color: var(--primary) !important;
-    font-family: 'Space Grotesk', sans-serif !important;
-    font-size: 2rem !important;
-    text-shadow: 0 0 25px rgba(247, 147, 26, 0.4);
+    font-size: 2.2rem !important;
+    background: linear-gradient(to bottom, #fff, var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none !important;
 }
 
-/* Section labels with Neon Underline */
-.section-label {
-    color: var(--primary);
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    margin-bottom: 1.5rem;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(247,147,26,0.2);
-    display: inline-block;
-}
-
-/* Styled Scrollbar */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { 
-    background: rgba(247, 147, 26, 0.2); 
-    border-radius: 10px; 
-}
-::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-
-/* Sidebar Premium */
-[data-testid="stSidebar"] {
-    background-color: #030508 !important;
-    border-right: 1px solid var(--border);
-}
-
-/* Glass Containers for Sections */
-.stContainer {
-    background: rgba(255, 255, 255, 0.02) !important;
-    border-radius: 24px !important;
-    padding: 25px !important;
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    margin-bottom: 2rem !important;
-}
-
-/* Buttons */
+/* Buttons with Neon Pulse */
 .stButton>button {
-    background: rgba(247, 147, 26, 0.1) !important;
+    background: transparent !important;
     border: 1px solid var(--primary) !important;
     color: var(--primary) !important;
-    border-radius: 10px !important;
-    font-weight: 600 !important;
-    transition: all 0.3s ease !important;
+    box-shadow: inset 0 0 10px rgba(247, 147, 26, 0.2) !important;
+    border-radius: 14px !important;
+    padding: 0.5rem 2rem !important;
 }
+
 .stButton>button:hover {
+    box-shadow: 0 0 25px var(--primary-glow), inset 0 0 10px var(--primary-glow) !important;
     background: var(--primary) !important;
     color: white !important;
-    box-shadow: 0 0 20px rgba(247, 147, 26, 0.4) !important;
 }
+
+/* Scrollbar and Sidebar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+[data-testid="stSidebar"] { background-color: #000 !important; border-right: 1px solid var(--border); }
 
 /* Sidebar */
 [data-testid="stSidebar"] {

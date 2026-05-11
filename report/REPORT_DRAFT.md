@@ -53,13 +53,14 @@ Statistical analysis of nonces to identify patterns in the search space, demonst
 
 ---
 
-## 4. UI/UX: Super-Premium Dashboard Design
+## 4. UI/UX: Hypermodern Cinematic Design
 
-The dashboard follows a "Super-Premium" design language:
-- **Cyber-Grid Background:** A moving animated grid providing a technical atmosphere.
-- **Neon Border Tracing:** CSS animations that trace borders, emphasizing "live" data.
-- **Glassmorphism 2.0:** Deep frosted-glass effects with enhanced contrast and blur.
-- **Micro-animations:** Pulsating "LIVE" indicators, marquee tickers, and custom scrollbars.
+The dashboard utilizes a "Hypermodern" aesthetic inspired by cinematic data visualization:
+- **Perspective Grid Drift:** A background animation that creates a sense of depth and continuous data flow.
+- **Cinematic Textures:** Subtle film grain overlays for a high-end, professional feel.
+- **Holographic Gradients:** Text and UI elements use multi-tone gradients to simulate high-tech displays.
+- **Floating Glassmorphism:** Components use vertical oscillation (floating) and deep saturation blurs to create a layered, modern interface.
+- **Micro-interactions:** Interactive scaling and neon-pulse effects on hover to engage the user.
 
 ---
 
@@ -67,5 +68,4 @@ The dashboard follows a "Super-Premium" design language:
 - Nakamoto, S. (2008). *Bitcoin: A Peer-to-Peer Electronic Cash System*.
 - Blockstream.info API Documentation. `https://blockstream.info/api`
 - Mempool.space API Documentation. `https://mempool.space/api`
-- Blockchain.info API Documentation. `https://blockchain.info/api`
 - Universidad Alfonso X el Sabio. *Topic 7: Blockchain and Cryptography notes*.
