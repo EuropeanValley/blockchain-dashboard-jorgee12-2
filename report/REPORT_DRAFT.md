@@ -59,10 +59,27 @@ We expanded the project by estimating the real-world cost of a 51% attack. Using
 ### 3.2 Nakamoto Double-Spend Probability
 Based on Section 11 of the original **Nakamoto (2008)** whitepaper, we visualize the probability of an attacker with $q$ hashrate successfully catching up after $z$ confirmations. This provides a quantitative measure of transaction security.
 
+### 3.3 Mempool & Fee Market (M7)
+We integrated live data from **mempool.space** to provide:
+- **Recommended fees** for different confirmation timeframes (Fastest, 30m, 60m).
+- **Mempool weight visualization** via a gauge chart, allowing users to estimate network congestion.
+This module helps bridge the gap between protocol-level metrics (hashrate, difficulty) and user-level utility (transaction fees).
+
 ---
 
-## 4. References
+## 4. UI/UX: State-of-the-Art Dashboard Design
+
+The dashboard was built with a "Premium-First" philosophy, going beyond standard framework defaults:
+- **Glassmorphism:** Using semi-transparent layers and background blur to create depth.
+- **Micro-animations:** Pulsating "LIVE" indicators and marquee tickers for a real-time feel.
+- **Typography:** Implementation of high-end fonts (*Inter* and *Space Grotesk*) to ensure clarity and a modern tech aesthetic.
+- **Responsiveness:** Modular grid layout that adapts to different viewing conditions.
+
+---
+
+## 5. References
 - Nakamoto, S. (2008). *Bitcoin: A Peer-to-Peer Electronic Cash System*.
 - Blockstream.info API Documentation. `https://blockstream.info/api`
+- Mempool.space API Documentation. `https://mempool.space/api`
 - Blockchain.info API Documentation. `https://blockchain.info/api`
 - Universidad Alfonso X el Sabio. *Topic 7: Blockchain and Cryptography notes*.

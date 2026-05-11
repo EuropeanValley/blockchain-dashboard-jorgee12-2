@@ -14,6 +14,7 @@ from modules import (
     m4_ai_component,
     m5_tx_explorer,
     m6_security,
+    m7_mempool,
 )
 
 # ── Page config ──────────────────────────────────────────────────────────────
@@ -160,6 +161,27 @@ with st.sidebar:
 # ── Global Header ────────────────────────────────────────────────────────────
 tip_hash, tip_block = load_tip()
 
+# ── Live Ticker ─────────────────────────────────────────────────────────────
+st.markdown("""
+<div style="background: rgba(247,147,26,0.05); border: 1px solid rgba(247,147,26,0.1); border-radius: 8px; padding: 10px 20px; margin-bottom: 2rem; display: flex; align-items: center; overflow: hidden;">
+    <div style="white-space: nowrap; animation: marquee 30s linear infinite; display: flex; gap: 50px; font-size: 0.85rem; font-weight: 500; color: #8B949E;">
+        <span>🔥 <span style="color:var(--primary)">NETWORK STATUS:</span> HEALTHY</span>
+        <span>📊 <span style="color:var(--primary)">DIFFICULTY:</span> {diff:.2e}</span>
+        <span>⏱ <span style="color:var(--primary)">AVG BLOCK TIME:</span> 10.02 MIN</span>
+        <span>⛓ <span style="color:var(--primary)">MEMPOOL:</span> ACTIVE</span>
+        <span>🚀 <span style="color:var(--primary)">HASH RATE:</span> {hr:.2f} EH/s</span>
+        <span>🔥 <span style="color:var(--primary)">NETWORK STATUS:</span> HEALTHY</span>
+        <span>📊 <span style="color:var(--primary)">DIFFICULTY:</span> {diff:.2e}</span>
+    </div>
+</div>
+<style>
+@keyframes marquee {{
+    0% {{ transform: translateX(0); }}
+    100% {{ transform: translateX(-50%); }}
+}}
+</style>
+""".format(diff=tip_block['difficulty'], hr=tip_block['difficulty'] * (2**32) / 600 / 1e18), unsafe_allow_html=True)
+
 st.markdown("""
 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
     <div style="display: flex; align-items: center; gap: 20px;">
@@ -192,34 +214,37 @@ st.markdown("""
 st.markdown("<hr>", unsafe_allow_html=True)
 
 # ── Section 1: Network & PoW Status ─────────────────────────────────────────
-col_m1, col_m2 = st.columns([1, 1], gap="large")
-
-with col_m1:
-    m1_pow_monitor.render()
-
-with col_m2:
-    m2_block_header.render()
+with st.container():
+    col_m1, col_m2 = st.columns([1, 1], gap="large")
+    with col_m1:
+        m1_pow_monitor.render()
+    with col_m2:
+        m2_block_header.render()
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
 # ── Section 2: AI & History ─────────────────────────────────────────────────
-col_m3, col_m4 = st.columns([1, 1], gap="large")
-
-with col_m3:
-    m3_difficulty_history.render()
-
-with col_m4:
-    m4_ai_component.render()
+with st.container():
+    col_m3, col_m4 = st.columns([1, 1], gap="large")
+    with col_m3:
+        m3_difficulty_history.render()
+    with col_m4:
+        m4_ai_component.render()
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# ── Section 3: Transactions & Security ──────────────────────────────────────
-col_m5, col_m6 = st.columns([1, 1], gap="large")
+# ── Section 3: Transactions & Mempool ───────────────────────────────────────
+with st.container():
+    col_m5, col_m7 = st.columns([1, 1], gap="large")
+    with col_m5:
+        m5_tx_explorer.render(tip_hash)
+    with col_m7:
+        m7_mempool.render()
 
-with col_m5:
-    m5_tx_explorer.render(tip_hash)
+st.markdown("<hr>", unsafe_allow_html=True)
 
-with col_m6:
+# ── Section 4: Security Score ───────────────────────────────────────────────
+with st.container():
     m6_security.render()
 
 # ── Auto-refresh logic ───────────────────────────────────────────────────────

@@ -117,3 +117,14 @@ def _difficulty_history_from_blockstream(n_periods: int = 100) -> list[dict]:
             continue
 
     return sorted(results, key=lambda d: d["x"])
+def get_mempool_fees() -> dict:
+    """Return recommended fees from mempool.space."""
+    r = requests.get("https://mempool.space/api/v1/fees/recommended", timeout=10)
+    r.raise_for_status()
+    return r.json()
+
+def get_mempool_stats() -> dict:
+    """Return general mempool statistics."""
+    r = requests.get("https://mempool.space/api/mempool", timeout=10)
+    r.raise_for_status()
+    return r.json()
