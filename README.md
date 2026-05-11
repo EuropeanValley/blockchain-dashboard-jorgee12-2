@@ -6,7 +6,7 @@ Real-time Bitcoin cryptographic metrics dashboard.
 
 ## Student Information
 - **Name:** Jorge Rodrigo Serrano
-- **GitHub Username:** jorgee12-19
+- **GitHub Username:** jorgee12
 
 ## Project Title
 CryptoChain Analyzer Dashboard
@@ -21,8 +21,11 @@ CryptoChain Analyzer Dashboard
 | M2 | Block Header Analyzer | ✅ Done |
 | M3 | Difficulty History | ✅ Done |
 | M4 | AI Component (Anomaly Detector) | ✅ Done |
-| M5 | Transaction Explorer (Optional) | ✅ Done |
-| M6 | Security Score (Optional) | ✅ Done |
+| M5 | Transaction Explorer | ✅ Done |
+| M6 | Security Score | ✅ Done |
+| M7 | Mempool & Fee Market | ✅ Done |
+| M8 | SegWit & Scalability | ✅ Done |
+| M9 | Nonce Entropy (ASIC Fingerprinting) | ✅ Done |
 
 ## Current Progress
 - Refactored the dashboard into a **modular structure** with a sidebar navigation.
@@ -60,8 +63,11 @@ blockchain-dashboard-jorgee12-2/
 │   ├── m2_block_header.py        # M2: header parse + hashlib PoW verification
 │   ├── m3_difficulty_history.py  # M3: difficulty chart + adjustment ratio
 │   ├── m4_ai_component.py        # M4: exponential anomaly detector (KS-evaluated)
-│   ├── m5_tx_explorer.py         # M5: (Optional) Transaction network graph
-│   └── m6_security.py            # M6: (Optional) 51% attack cost & Nakamoto prob.
+│   ├── m5_tx_explorer.py         # M5: Transaction network graph
+│   ├── m6_security.py            # M6: 51% attack cost & Nakamoto prob.
+│   ├── m7_mempool.py             # M7: Real-time Mempool & Fee market
+│   ├── m8_witness_analyzer.py    # M8: SegWit weight & scalability
+│   └── m9_nonce_entropy.py       # M9: ASIC Fingerprinting (Nonce entropy)
 └── report/                       # Final PDF report
 ```
 

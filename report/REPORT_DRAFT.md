@@ -1,5 +1,4 @@
-# CryptoChain Analyzer Dashboard - Project Report
-**Student:** Jorge Rodrigo Serrano (jorgee12-19)
+**Student:** Jorge Rodrigo Serrano (jorgee12)
 **Course:** Cryptography | Universidad Alfonso X el Sabio
 **Professor:** Jorge Calvo — Academic Year 2025–26
 
