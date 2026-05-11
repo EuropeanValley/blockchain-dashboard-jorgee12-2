@@ -60,20 +60,22 @@ We expanded the project by estimating the real-world cost of a 51% attack. Using
 Based on Section 11 of the original **Nakamoto (2008)** whitepaper, we visualize the probability of an attacker with $q$ hashrate successfully catching up after $z$ confirmations. This provides a quantitative measure of transaction security.
 
 ### 3.3 Mempool & Fee Market (M7)
-We integrated live data from **mempool.space** to provide:
-- **Recommended fees** for different confirmation timeframes (Fastest, 30m, 60m).
-- **Mempool weight visualization** via a gauge chart, allowing users to estimate network congestion.
-This module helps bridge the gap between protocol-level metrics (hashrate, difficulty) and user-level utility (transaction fees).
+We integrated live data from **mempool.space** to provide recommended fees and mempool weight visualization.
+
+### 3.4 Scalability and SegWit (M8)
+A deep dive into **Segregated Witness (SegWit)** allows us to analyze the difference between block **size** and **weight**. We demonstrate the "Witness Discount" cryptographic property and explain how it enables Layer 2 scaling (Lightning Network).
+
+### 3.5 Nonce Entropy & ASIC Fingerprinting (M9)
+By analyzing the statistical distribution of nonces, we evaluate the **entropy** of the mining process. Patterns in nonces can reveal "ASIC Fingerprinting," identifying specific hardware manufacturers based on their search patterns.
 
 ---
 
 ## 4. UI/UX: State-of-the-Art Dashboard Design
 
-The dashboard was built with a "Premium-First" philosophy, going beyond standard framework defaults:
-- **Glassmorphism:** Using semi-transparent layers and background blur to create depth.
-- **Micro-animations:** Pulsating "LIVE" indicators and marquee tickers for a real-time feel.
-- **Typography:** Implementation of high-end fonts (*Inter* and *Space Grotesk*) to ensure clarity and a modern tech aesthetic.
-- **Responsiveness:** Modular grid layout that adapts to different viewing conditions.
+The dashboard was built with a "Premium-First" philosophy:
+- **Glassmorphism:** Semi-transparent layers and background blur.
+- **Micro-animations:** Pulsating "LIVE" indicators and marquee tickers.
+- **Typography:** Implementation of high-end fonts (*Inter* and *Space Grotesk*).
 
 ---
 

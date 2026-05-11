@@ -15,6 +15,8 @@ from modules import (
     m5_tx_explorer,
     m6_security,
     m7_mempool,
+    m8_witness_analyzer,
+    m9_nonce_entropy,
 )
 
 # ── Page config ──────────────────────────────────────────────────────────────
@@ -32,8 +34,10 @@ st.markdown("""
 
 :root {
     --primary: #F7931A;
+    --neon-orange: #FFAB40;
+    --neon-blue: #00E5FF;
     --secondary: #1565C0;
-    --bg: #030508;
+    --bg: #010203;
     --card-bg: rgba(13, 17, 23, 0.7);
     --border: rgba(255, 255, 255, 0.1);
 }
@@ -147,6 +151,11 @@ def load_tip():
     block = get_block(tip_hash)
     return tip_hash, block
 
+@st.cache_data(ttl=60)
+def load_multi_blocks(n=50):
+    from api.blockchain_client import get_recent_blocks
+    return get_recent_blocks(n)
+
 # ── Sidebar Configuration ───────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## ₿ Settings")
@@ -160,6 +169,7 @@ with st.sidebar:
 
 # ── Global Header ────────────────────────────────────────────────────────────
 tip_hash, tip_block = load_tip()
+multi_blocks = load_multi_blocks(50)
 
 # ── Live Ticker ─────────────────────────────────────────────────────────────
 st.markdown("""
@@ -243,7 +253,17 @@ with st.container():
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# ── Section 4: Security Score ───────────────────────────────────────────────
+# ── Section 4: Cryptography Deep Dive (M8 & M9) ──────────────────────────────
+with st.container():
+    col_m8, col_m9 = st.columns([1, 1], gap="large")
+    with col_m8:
+        m8_witness_analyzer.render(multi_blocks)
+    with col_m9:
+        m9_nonce_entropy.render(multi_blocks)
+
+st.markdown("<hr>", unsafe_allow_html=True)
+
+# ── Section 5: Security Score ───────────────────────────────────────────────
 with st.container():
     m6_security.render()
 
