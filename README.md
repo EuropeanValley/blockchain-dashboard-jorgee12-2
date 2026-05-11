@@ -31,11 +31,12 @@ CryptoChain Analyzer Dashboard
 - Refactored the dashboard into a **modular structure** with a sidebar navigation.
 - Implemented **M1-M3** with live data from Blockstream and Blockchain.info.
 - Completed the **M4 AI component** with statistical evaluation (KS-test).
-- Added two optional modules (**M5 & M6**) for security and network analysis beyond the course notes.
-- Created the final project report draft in the `report/` directory.
+- Added two optional modules (**M5 & M6**) and three extra modules (**M7, M8, M9**) for high-performance security and scalability analysis.
+- Created and uploaded the final project report in PDF format to the `report/` directory.
+- Addressed all previous teacher feedback regarding README structure and module tracking.
 
 ## Next Step
-Generate the final PDF report from the draft and submit the repository link.
+- None. Project completed and submitted for final evaluation.
 
 ## Main Problem or Blocker
 None. All modules are fully operational and the project structure is now compliant with the requirements.
