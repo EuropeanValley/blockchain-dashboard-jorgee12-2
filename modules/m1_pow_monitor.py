@@ -35,7 +35,8 @@ def _load(n: int) -> list[dict]:
     return get_recent_blocks(n)
 
 
-def render() -> None:
+def render(multi_blocks=None) -> None:
+    st.markdown('<p class="section-label">Real-time PoW Monitor — M1</p>', unsafe_allow_html=True)
     # ── Controls ─────────────────────────────────────────────────────────────
     c_slider, c_btn = st.columns([6, 1])
     with c_slider:
@@ -49,7 +50,10 @@ def render() -> None:
     # ── Fetch ─────────────────────────────────────────────────────────────────
     with st.spinner(""):
         try:
-            blocks = _load(n)
+            if multi_blocks and n <= len(multi_blocks):
+                blocks = multi_blocks[:n]
+            else:
+                blocks = _load(n)
         except Exception as e:
             st.error(f"API error: {e}")
             return

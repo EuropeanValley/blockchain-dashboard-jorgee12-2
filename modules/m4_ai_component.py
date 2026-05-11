@@ -41,7 +41,12 @@ def _detect(times_sec: list[float], alpha: float):
     return df, mu, ks_stat, ks_p
 
 
-def render() -> None:
+def render(blocks: list) -> None:
+    st.markdown('<p class="section-label">AI Anomaly Detector & Statistical Prediction — M4</p>', unsafe_allow_html=True)
+    
+    if not blocks:
+        return
+
     # ── Controls ──────────────────────────────────────────────────────────────
     c1, c2, c3 = st.columns([4, 4, 1])
     with c1:

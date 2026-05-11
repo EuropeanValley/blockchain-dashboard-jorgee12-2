@@ -169,8 +169,7 @@ def _plot_tx_bubbles(txs):
     return fig
 
 def render(block_hash: str) -> None:
-    st.markdown('<p class="section-label">Transaction Network — block explorer</p>',
-                unsafe_allow_html=True)
+    st.markdown('<p class="section-label">Transaction Graph Explorer — M5</p>', unsafe_allow_html=True)
     with st.spinner("Fetching transactions…"):
         try:
             txs = _load_txs(block_hash)

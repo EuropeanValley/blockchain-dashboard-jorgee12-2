@@ -23,7 +23,12 @@ def _load(n: int) -> list[dict]:
     return get_difficulty_history(n)
 
 
-def render() -> None:
+def render(blocks: list) -> None:
+    st.markdown('<p class="section-label">Difficulty Evolution & History — M3</p>', unsafe_allow_html=True)
+    
+    if not blocks:
+        return
+
     # ── Controls ──────────────────────────────────────────────────────────────
     c_sl, c_btn = st.columns([6, 1])
     with c_sl:

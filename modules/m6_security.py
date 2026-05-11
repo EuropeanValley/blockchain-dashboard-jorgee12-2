@@ -36,13 +36,11 @@ def _nakamoto_prob(q, z):
     
     return 1.0 - sum_val
 
-def render() -> None:
+def render(block: dict) -> None:
     st.markdown('<p class="section-label">Security Score — M6 &nbsp;·&nbsp; Nakamoto Analysis</p>',
                 unsafe_allow_html=True)
     
     # ── KPI Data ─────────────────────────────────────────────────────────────
-    tip_hash = get_tip_hash()
-    block = get_block(tip_hash)
     difficulty = block["difficulty"]
     # Estimate hashrate (EH/s)
     hr_eh = difficulty * (2**32) / 600 / 1e18

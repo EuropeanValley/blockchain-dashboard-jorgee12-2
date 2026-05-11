@@ -46,7 +46,7 @@ def _load_latest() -> tuple[str, dict, str, dict]:
     return tip, block, hdr, _verify(hdr)
 
 
-def render() -> None:
+def render(tip_hash=None, tip_block=None) -> None:
     # ── Load controls ────────────────────────────────────────────────────────
     col_mode, col_inp, col_btn = st.columns([2, 5, 1])
     with col_mode:
@@ -71,16 +71,15 @@ def render() -> None:
     else:
         block_hash = manual_hash.strip()
         if not block_hash:
-            st.info("Enter a block hash above.")
+            st.warning("Enter a block hash to analyze.")
             return
-        with st.spinner(""):
-            try:
-                block      = get_block(block_hash)
-                header_hex = get_block_header_hex(block_hash)
-                pow_r      = _verify(header_hex)
-            except Exception as e:
-                st.error(f"API error: {e}")
-                return
+        try:
+            block      = get_block(block_hash)
+            header_hex = get_block_header_hex(block_hash)
+            pow_r      = _verify(header_hex)
+        except Exception as e:
+            st.error(f"API error: {e}")
+            return
 
     fields = _parse(header_hex)
     dt     = datetime.datetime.fromtimestamp(fields["timestamp"], datetime.UTC)
